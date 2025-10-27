@@ -1,0 +1,63 @@
+cry v0.1.0
+├── deep-translator v1.11.4
+│   ├── beautifulsoup4 v4.14.2
+│   │   ├── soupsieve v2.8
+│   │   └── typing-extensions v4.15.0
+│   └── requests v2.32.5
+│       ├── certifi v2025.10.5
+│       ├── charset-normalizer v3.4.4
+│       ├── idna v3.11
+│       └── urllib3 v2.5.0
+├── gtts v2.5.4
+│   ├── click v8.1.8
+│   │   └── colorama v0.4.6
+│   └── requests v2.32.5 (*)
+├── langdetect v1.0.9
+│   └── six v1.17.0
+├── numpy v2.3.4
+├── omegaconf v2.3.0
+│   ├── antlr4-python3-runtime v4.9.3
+│   └── pyyaml v6.0.3
+├── psutil v7.1.1
+├── pyttsx3 v2.99
+│   ├── comtypes v1.4.13
+│   ├── pypiwin32 v223
+│   │   └── pywin32 v311
+│   └── pywin32 v311
+├── pywin32 v311
+├── pyyaml v6.0.3
+├── rapidfuzz v3.14.1
+├── requests v2.32.5 (*)
+├── scipy v1.16.2
+│   └── numpy v2.3.4
+├── sounddevice v0.5.3
+│   └── cffi v2.0.0
+│       └── pycparser v2.23
+├── soundfile v0.13.1
+│   ├── cffi v2.0.0 (*)
+│   └── numpy v2.3.4
+├── speechrecognition v3.14.3
+│   ├── audioop-lts v0.2.2
+│   ├── standard-aifc v3.13.0
+│   │   ├── audioop-lts v0.2.2
+│   │   └── standard-chunk v3.13.0
+│   └── typing-extensions v4.15.0
+├── torch v2.9.0
+│   ├── filelock v3.20.0
+│   ├── fsspec v2025.9.0
+│   ├── jinja2 v3.1.6
+│   │   └── markupsafe v3.0.3
+│   ├── networkx v3.5
+│   ├── setuptools v80.9.0
+│   ├── sympy v1.14.0
+│   │   └── mpmath v1.3.0
+│   └── typing-extensions v4.15.0
+├── tqdm v4.67.1
+│   └── colorama v0.4.6
+└── vosk v0.3.45
+    ├── cffi v2.0.0 (*)
+    ├── requests v2.32.5 (*)
+    ├── srt v3.5.3
+    ├── tqdm v4.67.1 (*)
+    └── websockets v15.0.1
+(*) Package tree already displayed

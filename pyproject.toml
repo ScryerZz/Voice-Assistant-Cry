@@ -1,0 +1,28 @@
+[project]
+name = "cry"
+version = "0.1.0"
+description = "Voice Assistant Cry - Умный голосовой ассистент с AI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "deep-translator>=1.11.4",
+    "gtts>=2.5.4",
+    "langdetect>=1.0.9",
+    "numpy>=2.3.4",
+    "omegaconf>=2.3.0",
+    "psutil>=7.1.1",
+    "pyautogui>=0.9.54",
+    "pycaw>=20240210",
+    "pyttsx3>=2.99",
+    "pywin32>=311",
+    "pyyaml>=6.0.3",
+    "rapidfuzz>=3.14.1",
+    "requests>=2.32.5",
+    "scipy>=1.16.2",
+    "sounddevice>=0.5.3",
+    "soundfile>=0.13.1",
+    "speechrecognition>=3.14.3",
+    "torch>=2.9.0",
+    "tqdm>=4.67.1",
+    "vosk>=0.3.45",
+]

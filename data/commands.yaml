@@ -1,0 +1,578 @@
+skills:
+  assistant_control:
+    description: "Assistant Commands"
+    commands:
+      # Terminate Assistant
+      - patterns:
+          - "выключись"
+          - "останови работу"
+          - "заверши программу"
+          - "cry stop"
+          - "shut down"
+          - "terminate"
+        action: "assistant_control.shutdown_assistant"
+        response: 
+          ru: "Останавливает ассистента"
+          en: "Stopping assistant"
+      # Change Language
+      - patterns:
+          - "измени язык"
+          - "поменяй язык"
+          - "сменить язык"
+          - "change language"
+          - "switch language"
+          - "set language"
+        action: assistant_control.change_language
+        response:
+          ru: "Язык обновлён."
+          en: "Language changed."
+  
+  # yandexgpt:
+  #   description: "ai skills"
+  #   commands:
+  #     - patterns:
+  #         - "мне интересно"
+  #         - "интересно"
+  #         - "i am interested"
+  #         - "interested"
+  #       action: ai_skill.ask
+  #       response:
+  #         ru: "Яндекс ИИ готовит ответ!"
+  #         en: "YandexGPT is preparing a response!"
+
+  system:
+    description: "Системные команды"
+    commands:
+      # === Browser ===
+      - patterns:
+          - "открой браузер"
+          - "запусти браузер"
+          - "браузер открой"
+          - "включи браузер"
+          - "chrome открой"
+          - "google открой"
+          - "интернет открой"
+          - "open browser"
+          - "launch browser"
+          - "open google"
+          - "open chrome"
+          - "launch chrome"
+          - "start chrome"
+          - "run browser"
+        action: system.open_browser
+        response:
+          ru: "Открываю браузер."
+          en: "Opening browser."
+
+      # === Shutdown ===
+      - patterns:
+          - "выключи компьютер"
+          - "выключи пк"
+          - "отключи компьютер"
+          - "заверши работу"
+          - "заверши систему"
+          - "shutdown computer"
+          - "turn off computer"
+          - "power off"
+          - "turn off pc"
+          - "shut down the system"
+        action: system.shutdown
+        response:
+          ru: "Выключаю компьютер."
+          en: "Shutting down."
+
+      # === Restart ===
+      - patterns:
+          - "перезагрузи компьютер"
+          - "перезагрузи пк"
+          - "рестартни компьютер"
+          - "перезагрузи систему"
+          - "restart computer"
+          - "restart pc"
+          - "restart"
+          - "restart the system"
+        action: system.restart
+        response:
+          ru: "Перезагружаю компьютер."
+          en: "Restarting computer."
+
+      # === Sleep ===
+      - patterns:
+          - "усыпи компьютер"
+          - "усыпи пк"
+          - "спящий режим"
+          - "усыпи систему"
+          - "computer to sleep"
+          - "pc to sleep"
+          - "sleep mode"
+          - "system to sleep"
+        action: system.sleep
+        response:
+          ru: "Усыпляю компьютер."
+          en: "Starting sleep mode."
+      
+      # === Lock Screen ===
+      - patterns:
+          - "заблокируй экран"
+          - "заблокируй компьютер"
+          - "блокировка экрана"
+          - "заблокировать"
+          - "lock screen"
+          - "lock computer"
+          - "lock the screen"
+        action: system.lock_screen
+        response:
+          ru: "Блокирую экран..."
+          en: "Locking screen..."
+
+      # === Search online ===
+      - patterns:
+          - "найди в интернете"
+          - "поиск в интернете"
+          - "искать в интернете"
+          - "поищи в интернете"
+          - "поищи онлайн"
+          - "поиск онлайн"
+          - "search"
+          - "search online"
+          - "search in internet"
+          - "find in the internet"
+          - "find online"
+          - "google it"
+          - "look it up"
+          - "search for"
+          - "search about"
+        action: search_web.search_internet
+        response:
+          ru: "Секунду, ищу информацию..."
+          en: "One moment, searching online..."
+  
+  time_date:
+    description: "Время и дата"
+    commands:
+      - patterns:
+          # ==== ВРЕМЯ ====
+          - "сколько времени"
+          - "который час"
+          - "время сейчас"
+          - "скажи время"
+          - "текущее время"
+          - "время"
+          - "what time is it"
+          - "tell me the time"
+          - "current time"
+          - "time now"
+        action: time_info.get_time
+        response:
+          ru: "Секунду, проверяю время..."
+          en: "Just a second, checking the time..."
+
+      - patterns:
+          # ==== ДАТА ====
+          - "какая сегодня дата"
+          - "дата сегодня"
+          - "какое сегодня число"
+          - "дата"
+          - "today's date"
+          - "what date is it"
+          - "what day is it"
+          - "what is the date today"
+        action: time_info.get_date
+        response:
+          ru: "Сейчас скажу дату."
+          en: "Let me tell you the date."
+
+  music:
+    description: "Музыкальные команды"
+    commands:
+      # === Play music ===
+      - patterns:
+          - "включи музыку"
+          - "воспроизведи музыку"
+          - "музыку включи"
+          - "запусти музыку"
+          - "играй музыку"
+          - "музыка"
+          - "play music"
+          - "start music"
+          - "turn on music"
+          - "play some music"
+          - "start playing"
+          
+        action: music.play_music
+        response:
+          ru: "Включаю музыку."
+          en: "Playing music."
+
+  weather:
+    description: "Погода"
+    commands:
+      # === Weather ===
+      - patterns:
+          - "какая погода"
+          - "погода сейчас"
+          - "скажи погоду"
+          - "что по погоде"
+          - "погоду покажи"
+          - "how's the weather"
+          - "what's the weather"
+          - "tell me the weather"
+          - "check weather"
+          - "show weather"
+          - "weather now"
+        action: weather.get_weather
+        response:
+          ru: "Секунду, узнаю погоду..."
+          en: "One moment, checking weather..."
+  
+  notes:
+    description: "Заметки"
+    commands:
+      # === Add Note ===
+      - patterns:
+          - "добавь заметку"
+          - "создай заметку"
+          - "запиши заметку"
+          - "запиши"
+          - "add note"
+          - "create note"
+          - "write note"
+          - "note down"
+        action: notes.add_note
+        response:
+          ru: "Записываю заметку..."
+          en: "Writing note..."
+      
+      # === Read Notes ===
+      - patterns:
+          - "прочитай заметки"
+          - "покажи заметки"
+          - "мои заметки"
+          - "что в заметках"
+          - "список заметок"
+          - "read notes"
+          - "show notes"
+          - "my notes"
+          - "list notes"
+        action: notes.read_notes
+        response:
+          ru: "Читаю заметки..."
+          en: "Reading notes..."
+      
+      # === Clear Notes ===
+      - patterns:
+          - "удали все заметки"
+          - "очисти заметки"
+          - "сотри заметки"
+          - "удали заметки"
+          - "clear notes"
+          - "delete notes"
+          - "remove notes"
+        action: notes.clear_notes
+        response:
+          ru: "Удаляю заметки..."
+          en: "Deleting notes..."
+  
+  reminders:
+    description: "Таймеры и напоминания"
+    commands:
+      # === Timer ===
+      - patterns:
+          - "поставь таймер"
+          - "установи таймер"
+          - "таймер на"
+          - "включи таймер"
+          - "set timer"
+          - "start timer"
+          - "timer for"
+        action: reminder.set_timer
+        response:
+          ru: "Устанавливаю таймер..."
+          en: "Setting timer..."
+      
+      # === Reminder ===
+      - patterns:
+          - "напомни"
+          - "напоминание"
+          - "установи напоминание"
+          - "remind me"
+          - "set reminder"
+          - "reminder"
+        action: reminder.set_reminder
+        response:
+          ru: "Устанавливаю напоминание..."
+          en: "Setting reminder..."
+  
+  youtube:
+    description: "Поиск на YouTube"
+    commands:
+      # === YouTube Search ===
+      - patterns:
+          - "найди на ютубе"
+          - "ищи на ютубе"
+          - "поиск на ютубе"
+          - "найди видео"
+          - "ютуб"
+          - "youtube"
+          - "search youtube"
+          - "find on youtube"
+          - "search on youtube"
+        action: youtube.search_youtube
+        response:
+          ru: "Ищу на YouTube..."
+          en: "Searching on YouTube..."
+  
+  translator:
+    description: "Переводчик текста"
+    commands:
+      # === Translate ===
+      - patterns:
+          - "переведи"
+          - "перевод"
+          - "переведи на английский"
+          - "переведи на русский"
+          - "translate"
+          - "translate to english"
+          - "translate to russian"
+        action: translator.translate_text
+        response:
+          ru: "Перевожу текст..."
+          en: "Translating text..."
+  
+  system_info:
+    description: "Информация о системе и батарее"
+    commands:
+      # === System Info ===
+      - patterns:
+          - "информация о системе"
+          - "системная информация"
+          - "характеристики системы"
+          - "какая у меня система"
+          - "system info"
+          - "system information"
+          - "show system info"
+        action: system_info.get_system_info
+        response:
+          ru: "Получаю информацию о системе..."
+          en: "Getting system information..."
+      
+      # === Battery Status ===
+      - patterns:
+          - "заряд батареи"
+          - "статус батареи"
+          - "батарея"
+          - "сколько заряда"
+          - "battery status"
+          - "battery level"
+          - "check battery"
+        action: system_info.get_battery_status
+        response:
+          ru: "Проверяю батарею..."
+          en: "Checking battery..."
+  
+  news:
+    description: "Поиск новостей"
+    commands:
+      # === Search News ===
+      - patterns:
+          - "новости"
+          - "найди новости"
+          - "поищи новости"
+          - "последние новости"
+          - "свежие новости"
+          - "что нового"
+          - "news"
+          - "latest news"
+          - "search news"
+          - "find news"
+        action: news.search_news
+        response:
+          ru: "Ищу новости..."
+          en: "Searching news..."
+  
+  system_control:
+    description: "Управление системой: скриншоты, громкость, очистка"
+    commands:
+      # === Screenshot ===
+      - patterns:
+          - "сделай скриншот"
+          - "скриншот"
+          - "сохрани экран"
+          - "screenshot"
+          - "take screenshot"
+          - "capture screen"
+        action: system_control.screenshot
+        response:
+          ru: "Делаю скриншот..."
+          en: "Taking screenshot..."
+      
+      # === Volume Control ===
+      - patterns:
+          - "громкость на максимум"
+          - "максимальная громкость"
+          - "звук на полную"
+          - "volume max"
+          - "max volume"
+          - "full volume"
+        action: system_control.set_volume_max
+        response:
+          ru: "Устанавливаю громкость на максимум..."
+          en: "Setting maximum volume..."
+      
+      - patterns:
+          - "громкость повыше"
+          - "высокая громкость"
+          - "прибавь громкость"
+          - "volume high"
+          - "high volume"
+          - "increase volume"
+        action: system_control.set_volume_high
+        response:
+          ru: "Устанавливаю высокую громкость..."
+          en: "Setting high volume..."
+      
+      - patterns:
+          - "громкость на половину"
+          - "средняя громкость"
+          - "звук наполовину"
+          - "volume mid"
+          - "medium volume"
+          - "half volume"
+        action: system_control.set_volume_mid
+        response:
+          ru: "Устанавливаю среднюю громкость..."
+          en: "Setting medium volume..."
+      
+      - patterns:
+          - "громкость пониже"
+          - "низкая громкость"
+          - "убавь громкость"
+          - "volume low"
+          - "low volume"
+          - "decrease volume"
+        action: system_control.set_volume_low
+        response:
+          ru: "Устанавливаю низкую громкость..."
+          en: "Setting low volume..."
+      
+      - patterns:
+          - "выключи звук"
+          - "отключи звук"
+          - "беззвучный режим"
+          - "тишина"
+          - "mute"
+          - "volume off"
+          - "sound off"
+          - "silence"
+        action: system_control.set_volume_min
+        response:
+          ru: "Выключаю звук..."
+          en: "Muting..."
+      
+      # === System Cleanup ===
+      - patterns:
+          - "очисти систему"
+          - "очисти компьютер"
+          - "почисти систему"
+          - "clean system"
+          - "cleanup system"
+          - "clear system"
+        action: system_control.clean_system
+        response:
+          ru: "Очищаю систему..."
+          en: "Cleaning system..."
+      
+      - patterns:
+          - "очисти корзину"
+          - "удали из корзины"
+          - "empty recycle bin"
+          - "clear trash"
+        action: system_control.clear_recycle_bin
+        response:
+          ru: "Очищаю корзину..."
+          en: "Emptying recycle bin..."
+      
+      - patterns:
+          - "очисти загрузки"
+          - "удали загрузки"
+          - "clear downloads"
+          - "clean downloads"
+        action: system_control.clear_downloads
+        response:
+          ru: "Очищаю загрузки..."
+          en: "Cleaning downloads..."
+
+meta:
+  reload_dataset:
+    patterns:
+      - "обнови команды"
+      - "перезагрузи команды"
+      - "перезагрузи датасет"
+      - "reload dataset"
+      - "update dataset"
+      - "reload commands"
+    response:
+      ru: "Датасет обновлён."
+      en: "Dataset reloaded."
+
+  restart_skills:
+    patterns:
+      - "перезагрузи навыки"
+      - "перезапусти навыки"
+      - "обнови навыки"
+      - "reload skills"
+      - "restart skills"
+      - "update skills"
+    response:
+      ru: "Навыки перезапущены."
+      en: "Skills reloaded."
+
+  play_quote:
+    patterns:
+      - "проиграй цитату"
+      - "воспроизведи цитату"
+      - "цитату включи"
+      - "play quote"
+      - "play a movie quote"
+      - "quote from film"
+    response:
+      ru: "Сейчас воспроизведу цитату из фильма."
+      en: "Playing a quote from a movie."
+
+smalltalk:
+  description: "Простые разговорные ответы"
+  commands:
+    - patterns:
+        - "ты молодец"
+        - "молодец"
+        - "красавчик"
+        - "good job"
+        - "well done"
+      response:
+        ru: "Спасибо, сэр. Вы тоже на высоте!"
+        en: "Thank you, sir. You're amazing too!"
+
+    - patterns:
+        - "ты тупой"
+        - "ты дурак"
+        - "глупый"
+        - "идиот"
+        - "stupid"
+        - "fool"
+      response:
+        ru: "Очень тонкое замечание, сэр."
+        en: "A very subtle remark, sir."
+
+    - patterns:
+        - "спасибо"
+        - "thank you"
+      response:
+        ru: "Всегда пожалуйста!"
+        en: "You're welcome!"
+
+    - patterns:
+        - "как дела"
+        - "how are you"
+      response:
+        ru: "Всё отлично, сэр! А у вас?"
+        en: "I'm great, sir! How about you?"
