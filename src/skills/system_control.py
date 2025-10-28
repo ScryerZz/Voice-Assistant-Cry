@@ -34,31 +34,29 @@ except ImportError:
 # ============================================================
 
 def screenshot(*args, **kwargs):
-    """Делает скриншот экрана и сохраняет на рабочий стол"""
+    """Делает скриншот экрана и сохраняет в папку data/screenshots"""
     
     if not PYAUTOGUI_AVAILABLE:
-        return "⚠️ Модуль pyautogui не установлен. Установите: pip install pyautogui"
+        return "Модуль pyautogui не установлен. Установите: pip install pyautogui"
+    
+    SCREENSHOT_DIR = Path("data/screenshots")
     
     try:
-        # Определяем путь к рабочему столу
-        desktop = Path.home() / "Desktop"
-        if not desktop.exists():
-            desktop = Path.home() / "Рабочий стол"  # для русской Windows
-        if not desktop.exists():
-            desktop = Path.home()  # используем домашнюю папку
+        # Создаем директорию для скриншотов
+        SCREENSHOT_DIR.mkdir(exist_ok=True, parents=True)
         
-        # Генерируем имя файла
+        # Генерируем имя файла с временной меткой
         filename = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-        filepath = desktop / filename
+        filepath = SCREENSHOT_DIR / filename
         
         # Делаем скриншот
         image = pyautogui.screenshot()
         image.save(str(filepath))
         
-        return f"📸 Скриншот сохранён: {filepath.name}"
+        return f"Скриншот сохранён: {filepath}"
     
     except Exception as e:
-        return f"❌ Ошибка при создании скриншота: {e}"
+        return f"Ошибка при создании скриншота: {e}"
 
 
 # ============================================================
@@ -83,36 +81,36 @@ def _control_volume(volume: float) -> bool:
 def set_volume_max(*args, **kwargs):
     """Устанавливает максимальную громкость (100%)"""
     if _control_volume(1.0):
-        return "🔊 Громкость установлена на максимум (100%)."
-    return "⚠️ Управление громкостью недоступно на этой системе."
+        return "Громкость установлена на максимум (100%)."
+    return "Управление громкостью недоступно на этой системе."
 
 
 def set_volume_high(*args, **kwargs):
     """Устанавливает высокую громкость (75%)"""
     if _control_volume(0.75):
-        return "🔊 Громкость установлена на 75%."
-    return "⚠️ Управление громкостью недоступно на этой системе."
+        return "Громкость установлена на 75%."
+    return "Управление громкостью недоступно на этой системе."
 
 
 def set_volume_mid(*args, **kwargs):
     """Устанавливает среднюю громкость (50%)"""
     if _control_volume(0.5):
-        return "🔊 Громкость установлена на 50%."
-    return "⚠️ Управление громкостью недоступно на этой системе."
+        return "Громкость установлена на 50%."
+    return "Управление громкостью недоступно на этой системе."
 
 
 def set_volume_low(*args, **kwargs):
     """Устанавливает низкую громкость (25%)"""
     if _control_volume(0.25):
-        return "🔉 Громкость установлена на 25%."
-    return "⚠️ Управление громкостью недоступно на этой системе."
+        return "Громкость установлена на 25%."
+    return "Управление громкостью недоступно на этой системе."
 
 
 def set_volume_min(*args, **kwargs):
     """Выключает звук (0%)"""
     if _control_volume(0.0):
-        return "🔇 Звук выключен."
-    return "⚠️ Управление громкостью недоступно на этой системе."
+        return "Звук выключен."
+    return "Управление громкостью недоступно на этой системе."
 
 
 # ============================================================
@@ -138,23 +136,23 @@ def clear_temp(*args, **kwargs):
             except Exception:
                 failed_count += 1
         
-        return f"🗑️ Временные файлы: удалено {deleted_count}, пропущено {failed_count}."
+        return f"Временные файлы: удалено {deleted_count}, пропущено {failed_count}."
     
     except Exception as e:
-        return f"❌ Ошибка при очистке временных файлов: {e}"
+        return f"Ошибка при очистке временных файлов: {e}"
 
 
 def clear_recycle_bin(*args, **kwargs):
     """Очищает корзину (только Windows)"""
     
     if platform.system() != "Windows":
-        return "⚠️ Очистка корзины доступна только на Windows."
+        return "Очистка корзины доступна только на Windows."
     
     try:
         ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, 0x0007)
-        return "✅ Корзина очищена."
+        return "Корзина очищена."
     except Exception as e:
-        return f"❌ Не удалось очистить корзину: {e}"
+        return f"Не удалось очистить корзину: {e}"
 
 
 def clear_downloads(*args, **kwargs):  # pyright: ignore[reportUnusedParameter, reportUnusedParameter]
@@ -193,8 +191,8 @@ def clear_downloads(*args, **kwargs):  # pyright: ignore[reportUnusedParameter, 
     #     return f"🗑️ Загрузки: удалено {deleted_count}, пропущено {failed_count}."
     
     # except Exception as e:
-    #     return f"❌ Ошибка при очистке загрузок: {e}"
-    return "❌ Фунция очистки этого раздела закомментирована и не выполняется!"
+    #     return f"Ошибка при очистке загрузок: {e}"
+    return "Функция очистки этого раздела закомментирована и не выполняется!"
 
 
 def clean_system(*args, **kwargs):
@@ -205,6 +203,6 @@ def clean_system(*args, **kwargs):
     # results.append(clear_downloads())
     # results.append(clear_temp())
     
-    # return "✅ Очистка завершена.\n" + "\n".join(results)
-    return "❌ Фунция очистки этого раздела закомментирована и не выполняется!"
+    # return "Очистка завершена.\n" + "\n".join(results)
+    return "Функция очистки этого раздела закомментирована и не выполняется!"
 

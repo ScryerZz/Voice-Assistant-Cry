@@ -36,7 +36,11 @@ class SkillManager:
                 except Exception as e:
                     self.log(f"ERROR {name}: {e}")
 
-    def execute(self, action: str, text: str = None):
+    def execute(self, action: str, text: str = None, **kwargs):
+        """
+        Выполняет действие навыка.
+        Поддерживает передачу дополнительных параметров через **kwargs.
+        """
         if not action:
             return "⚠️ Действие не указано."
         
@@ -45,17 +49,37 @@ class SkillManager:
             module = self.skills.get(mod)
             if not module or not hasattr(module, fn):
                 return f"❌ Не найдено: {action}"
-            return self._safe_call(getattr(module, fn), action, text)
+            return self._safe_call(getattr(module, fn), action, text, kwargs)
         
         for module in self.skills.values():
             fn = getattr(module, action, None)
             if callable(fn):
-                return self._safe_call(fn, action, text)
+                return self._safe_call(fn, action, text, kwargs)
         return f"⚠️ Навык '{action}' не найден."
 
-    def _safe_call(self, fn, action, text):
+    def _safe_call(self, fn, action, text, extra_kwargs):
+        """
+        Безопасный вызов функции навыка.
+        Объединяет context и дополнительные kwargs.
+        """
         try:
-            return fn(action=action, text=text, **self.context)
+            # Объединяем все параметры
+            call_kwargs = {
+                'action': action,
+                'text': text,
+                **self.context,
+                **extra_kwargs
+            }
+            return fn(**call_kwargs)
+        except TypeError as e:
+            # Если функция не принимает все параметры, пробуем упрощенный вызов
+            try:
+                return fn(text, **extra_kwargs)
+            except:
+                try:
+                    return fn()
+                except:
+                    return f"⚠️ Ошибка в {action}: {e}"
         except Exception as e:
             return f"⚠️ Ошибка в {action}: {e}"
 

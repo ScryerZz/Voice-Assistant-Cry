@@ -54,17 +54,17 @@ def sleep(*args, **kwargs):
     try:
         if platform.system() == "Windows":
             os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
-            return "😴 Перевожу компьютер в спящий режим."
+            return "Перевожу компьютер в спящий режим."
         elif platform.system() == "Linux":
             os.system("systemctl suspend")
-            return "😴 Перевожу компьютер в спящий режим."
+            return "Перевожу компьютер в спящий режим."
         elif platform.system() == "Darwin":  # macOS
             os.system("pmset sleepnow")
-            return "😴 Перевожу компьютер в спящий режим."
+            return "Перевожу компьютер в спящий режим."
         else:
-            return "⚠️ Спящий режим не поддерживается на этой системе."
+            return "Спящий режим не поддерживается на этой системе."
     except Exception as e:
-        return f"❌ Ошибка при переходе в спящий режим: {e}"
+        return f"Ошибка при переходе в спящий режим: {e}"
 
 
 def lock_screen(*args, **kwargs):
@@ -72,15 +72,15 @@ def lock_screen(*args, **kwargs):
     try:
         if platform.system() == "Windows":
             os.system("rundll32.exe user32.dll,LockWorkStation")
-            return "🔒 Экран заблокирован."
+            return "Экран заблокирован."
         elif platform.system() == "Linux":
             # Пробуем разные команды для Linux
             os.system("gnome-screensaver-command -l || xdg-screensaver lock || loginctl lock-session")
-            return "🔒 Экран заблокирован."
+            return "Экран заблокирован."
         elif platform.system() == "Darwin":  # macOS
             os.system("pmset displaysleepnow")
-            return "🔒 Экран заблокирован."
+            return "Экран заблокирован."
         else:
-            return "⚠️ Блокировка экрана не поддерживается на этой системе."
+            return "Блокировка экрана не поддерживается на этой системе."
     except Exception as e:
-        return f"❌ Ошибка при блокировке экрана: {e}"
+        return f"Ошибка при блокировке экрана: {e}"

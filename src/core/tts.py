@@ -187,6 +187,17 @@ class HybridTTS:
         except Exception as e:
             print(f"⚠️ Ошибка при воспроизведении {file_path}: {e}")
 
+    def play_audio(self, audio_file: str):
+        """
+        Алиас для play_audio_file для совместимости.
+        Проигрывает аудиофайл из media/audios.
+        """
+        if isinstance(audio_file, str):
+            file_path = self.media_dir / audio_file
+        else:
+            file_path = audio_file
+        return self.play_audio_file(file_path)
+
     # ----------------------------- #
     # 🔹 Settings
     # ----------------------------- #

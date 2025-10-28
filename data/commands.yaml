@@ -502,6 +502,209 @@ skills:
           ru: "Очищаю загрузки..."
           en: "Cleaning downloads..."
 
+  apps:
+    description: "Управление приложениями"
+    commands:
+      # === Telegram ===
+      - patterns:
+          - "открой телеграм"
+          - "запусти телеграм"
+          - "включи телеграм"
+          - "open telegram"
+          - "launch telegram"
+          - "start telegram"
+        action: apps.open_telegram
+        response:
+          ru: "Открываю Telegram..."
+          en: "Opening Telegram..."
+      
+      - patterns:
+          - "закрой телеграм"
+          - "выключи телеграм"
+          - "останови телеграм"
+          - "close telegram"
+          - "quit telegram"
+          - "stop telegram"
+        action: apps.close_telegram
+        response:
+          ru: "Закрываю Telegram..."
+          en: "Closing Telegram..."
+      
+      # === Яндекс Музыка ===
+      - patterns:
+          - "открой яндекс музыку"
+          - "запусти яндекс музыку"
+          - "включи яндекс музыку"
+          - "открой музыку"
+          - "open yandex music"
+          - "launch yandex music"
+        action: apps.open_yamusic
+        response:
+          ru: "Открываю Яндекс Музыку..."
+          en: "Opening Yandex Music..."
+      
+      - patterns:
+          - "закрой яндекс музыку"
+          - "выключи яндекс музыку"
+          - "останови яндекс музыку"
+          - "закрой музыку"
+          - "close yandex music"
+          - "quit yandex music"
+        action: apps.close_yamusic
+        response:
+          ru: "Закрываю Яндекс Музыку..."
+          en: "Closing Yandex Music..."
+      
+      # === Discord ===
+      - patterns:
+          - "открой дискорд"
+          - "запусти дискорд"
+          - "включи дискорд"
+          - "open discord"
+          - "launch discord"
+          - "start discord"
+        action: apps.open_discord
+        response:
+          ru: "Открываю Discord..."
+          en: "Opening Discord..."
+      
+      - patterns:
+          - "закрой дискорд"
+          - "выключи дискорд"
+          - "останови дискорд"
+          - "close discord"
+          - "quit discord"
+          - "stop discord"
+        action: apps.close_discord
+        response:
+          ru: "Закрываю Discord..."
+          en: "Closing Discord..."
+      
+      # === Steam ===
+      - patterns:
+          - "открой стим"
+          - "запусти стим"
+          - "включи стим"
+          - "открой steam"
+          - "open steam"
+          - "launch steam"
+          - "start steam"
+        action: apps.open_steam
+        response:
+          ru: "Открываю Steam..."
+          en: "Opening Steam..."
+      
+      - patterns:
+          - "закрой стим"
+          - "выключи стим"
+          - "закрой steam"
+          - "close steam"
+          - "quit steam"
+          - "stop steam"
+        action: apps.close_steam
+        response:
+          ru: "Закрываю Steam..."
+          en: "Closing Steam..."
+      
+      # === FL Studio ===
+      - patterns:
+          - "открой фл студио"
+          - "запусти фл студио"
+          - "включи фл студио"
+          - "открой fl studio"
+          - "open fl studio"
+          - "launch fl studio"
+        action: apps.open_flstudio
+        response:
+          ru: "Открываю FL Studio..."
+          en: "Opening FL Studio..."
+      
+      - patterns:
+          - "закрой фл студио"
+          - "выключи фл студио"
+          - "закрой fl studio"
+          - "close fl studio"
+          - "quit fl studio"
+        action: apps.close_flstudio
+        response:
+          ru: "Закрываю FL Studio..."
+          en: "Closing FL Studio..."
+      
+      # === MS Word ===
+      - patterns:
+          - "открой ворд"
+          - "запусти ворд"
+          - "включи ворд"
+          - "открой word"
+          - "open word"
+          - "launch word"
+          - "start word"
+        action: apps.open_msword
+        response:
+          ru: "Открываю Microsoft Word..."
+          en: "Opening Microsoft Word..."
+      
+      - patterns:
+          - "закрой ворд"
+          - "выключи ворд"
+          - "закрой word"
+          - "close word"
+          - "quit word"
+        action: apps.close_msword
+        response:
+          ru: "Закрываю Microsoft Word..."
+          en: "Closing Microsoft Word..."
+      
+      # === MS Excel ===
+      - patterns:
+          - "открой эксель"
+          - "запусти эксель"
+          - "включи эксель"
+          - "открой excel"
+          - "open excel"
+          - "launch excel"
+          - "start excel"
+        action: apps.open_msexcel
+        response:
+          ru: "Открываю Microsoft Excel..."
+          en: "Opening Microsoft Excel..."
+      
+      - patterns:
+          - "закрой эксель"
+          - "выключи эксель"
+          - "закрой excel"
+          - "close excel"
+          - "quit excel"
+        action: apps.close_msexcel
+        response:
+          ru: "Закрываю Microsoft Excel..."
+          en: "Closing Microsoft Excel..."
+      
+      # === MS PowerPoint ===
+      - patterns:
+          - "открой повер поинт"
+          - "запусти повер поинт"
+          - "включи повер поинт"
+          - "открой powerpoint"
+          - "open powerpoint"
+          - "launch powerpoint"
+          - "start powerpoint"
+        action: apps.open_mspowerpoint
+        response:
+          ru: "Открываю Microsoft PowerPoint..."
+          en: "Opening Microsoft PowerPoint..."
+      
+      - patterns:
+          - "закрой повер поинт"
+          - "выключи повер поинт"
+          - "закрой powerpoint"
+          - "close powerpoint"
+          - "quit powerpoint"
+        action: apps.close_mspowerpoint
+        response:
+          ru: "Закрываю Microsoft PowerPoint..."
+          en: "Closing Microsoft PowerPoint..."
+
 meta:
   reload_dataset:
     patterns:
