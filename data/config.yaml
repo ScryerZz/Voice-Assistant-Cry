@@ -29,8 +29,8 @@ assistant:
   voice: default
   personality: friendly
   ai_enabled: true
-  yandexgpt_api_key: AQVNzdaTgqmKKHkSVd--tQYka1cFWbB4c193Dx2t
-  yandex_folder_id: b1gfp46940a5akurro5v
+  yandexgpt_api_key: ''
+  yandex_folder_id: ''
 debug: true
 logging:
   dir: data/logs
@@ -103,10 +103,10 @@ silero:
   sample_rate: 48000
   use_cuda: true
 weather:
-  api_key: 1f70a53f14b4b3a2ac6e4f0f475f9f18
+  api_key: ''
   default_city: Казань
 news:
-  api_key: 1c484ac94e54476ca0646d6ebacf2151
+  api_key: ''
 system_power:
   shutdown_delay_seconds: 30
 safety:
