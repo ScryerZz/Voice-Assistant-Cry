@@ -1,5 +1,6 @@
 import re
 import webbrowser
+from urllib.parse import quote_plus
 
 def search_internet(*args, **kwargs):
     """
@@ -47,6 +48,6 @@ def search_internet(*args, **kwargs):
 
     # 🌍 Выполняем поиск
     print(f"🌍 Открываю поиск: {clean_query}")
-    webbrowser.open(f"https://www.google.com/search?q={clean_query}")
+    webbrowser.open(f"https://www.google.com/search?q={quote_plus(clean_query)}")
 
     return f"🔎 Ищу в интернете: {clean_query}"

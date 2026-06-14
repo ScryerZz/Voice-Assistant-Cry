@@ -1,6 +1,32 @@
 import os
 import webbrowser
 import platform
+import subprocess
+
+
+DEFAULT_POWER_DELAY_SECONDS = 30
+MIN_POWER_DELAY_SECONDS = 5
+MAX_POWER_DELAY_SECONDS = 600
+
+
+def _power_delay_seconds(config: dict | None) -> int:
+    power_config = (config or {}).get("system_power", {})
+    try:
+        delay = int(power_config.get("shutdown_delay_seconds", DEFAULT_POWER_DELAY_SECONDS))
+    except (TypeError, ValueError):
+        delay = DEFAULT_POWER_DELAY_SECONDS
+    return max(MIN_POWER_DELAY_SECONDS, min(delay, MAX_POWER_DELAY_SECONDS))
+
+
+def _run_command(command: list[str]) -> tuple[bool, str]:
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+        return True, ""
+    except FileNotFoundError:
+        return False, f"Команда не найдена: {command[0]}"
+    except subprocess.CalledProcessError as exc:
+        message = (exc.stderr or exc.stdout or "").strip()
+        return False, message or str(exc)
 
 def open_browser(*args, **kwargs):
     try:
@@ -12,41 +38,72 @@ def open_browser(*args, **kwargs):
 
 
 def shutdown(*args, **kwargs):
-    # """Выключает компьютер (кросс-платформенно)"""
-    # try:
-    #     if platform.system() == "Windows":
-    #         os.system("shutdown /s /t 1")
-    #         return "💤 Выключаю компьютер через 1 секунду."
-    #     elif platform.system() == "Linux":
-    #         os.system("systemctl poweroff")
-    #         return "💤 Выключаю компьютер."
-    #     elif platform.system() == "Darwin":  # macOS
-    #         os.system("sudo shutdown -h now")
-    #         return "💤 Выключаю компьютер."
-    #     else:
-    #         return "⚠️ Выключение не поддерживается на этой системе."
-    # except Exception as e:
-    #     return f"❌ Ошибка при выключении: {e}"
-    return "Команда выключения получена (функция закомментирована и не выполняется!)."
+    """Планирует выключение компьютера после safety-подтверждения."""
+    system_name = platform.system()
+    delay = _power_delay_seconds(kwargs.get("config"))
+
+    if system_name == "Windows":
+        ok, error = _run_command([
+            "shutdown.exe",
+            "/s",
+            "/t",
+            str(delay),
+            "/c",
+            "Cry Assistant: выключение подтверждено пользователем.",
+        ])
+        if ok:
+            return f"Выключение запланировано через {delay} секунд. Чтобы отменить, скажите: отмени выключение."
+        return f"Не удалось запланировать выключение: {error}"
+
+    if system_name == "Linux":
+        ok, error = _run_command(["systemctl", "poweroff"])
+        return "Выключаю компьютер." if ok else f"Не удалось выключить компьютер: {error}"
+
+    if system_name == "Darwin":
+        ok, error = _run_command(["osascript", "-e", 'tell app "System Events" to shut down'])
+        return "Выключаю компьютер." if ok else f"Не удалось выключить компьютер: {error}"
+
+    return "Выключение не поддерживается на этой системе."
 
 
 def restart(*args, **kwargs):
-    # """Перезагружает компьютер (кросс-платформенно)"""
-    # try:
-    #     if platform.system() == "Windows":
-    #         os.system("shutdown /r /t 1")
-    #         return "🔄 Перезагружаю компьютер через 1 секунду."
-    #     elif platform.system() == "Linux":
-    #         os.system("systemctl reboot")
-    #         return "🔄 Перезагружаю компьютер."
-    #     elif platform.system() == "Darwin":  # macOS
-    #         os.system("sudo shutdown -r now")
-    #         return "🔄 Перезагружаю компьютер."
-    #     else:
-    #         return "⚠️ Перезагрузка не поддерживается на этой системе."
-    # except Exception as e:
-    #     return f"❌ Ошибка при перезагрузке: {e}"
-    return "Команда перезагрузки получена (функция закомментирована и не выполняется!)."
+    """Планирует перезагрузку компьютера после safety-подтверждения."""
+    system_name = platform.system()
+    delay = _power_delay_seconds(kwargs.get("config"))
+
+    if system_name == "Windows":
+        ok, error = _run_command([
+            "shutdown.exe",
+            "/r",
+            "/t",
+            str(delay),
+            "/c",
+            "Cry Assistant: перезагрузка подтверждена пользователем.",
+        ])
+        if ok:
+            return f"Перезагрузка запланирована через {delay} секунд. Чтобы отменить, скажите: отмени перезагрузку."
+        return f"Не удалось запланировать перезагрузку: {error}"
+
+    if system_name == "Linux":
+        ok, error = _run_command(["systemctl", "reboot"])
+        return "Перезагружаю компьютер." if ok else f"Не удалось перезагрузить компьютер: {error}"
+
+    if system_name == "Darwin":
+        ok, error = _run_command(["osascript", "-e", 'tell app "System Events" to restart'])
+        return "Перезагружаю компьютер." if ok else f"Не удалось перезагрузить компьютер: {error}"
+
+    return "Перезагрузка не поддерживается на этой системе."
+
+
+def cancel_shutdown(*args, **kwargs):
+    """Отменяет запланированное выключение или перезагрузку Windows."""
+    if platform.system() != "Windows":
+        return "Отмена запланированного выключения поддерживается только на Windows."
+
+    ok, error = _run_command(["shutdown.exe", "/a"])
+    if ok:
+        return "Запланированное выключение или перезагрузка отменены."
+    return f"Не удалось отменить выключение или перезагрузку: {error}"
 
 
 def sleep(*args, **kwargs):

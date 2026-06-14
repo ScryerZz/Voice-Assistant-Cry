@@ -1,333 +1,138 @@
-# ⚙️ Документация: как создавать и управлять командами в `commands.yaml`
+# Команды И Навыки
 
----
+Встроенные команды находятся в:
 
-## 🧩 Общая структура системы
+```text
+data/commands.yaml
+```
 
-Система команд ассистента построена на основе **трёх уровней логики**:
+Пользовательские фразы, добавленные из UI, сохраняются отдельно:
 
-| Категория     | Назначение                                                 | Примеры                                         |
-| ------------- | ---------------------------------------------------------- | ----------------------------------------------- |
-| **skills**    | Основные функции ассистента (работа, поиск, музыка и т.д.) | `system.shutdown`, `search_web.search_internet` |
-| **meta**      | Внутренние служебные операции                              | `reload_dataset`, `restart_skills`              |
-| **smalltalk** | Простой разговорный режим                                  | “ты молодец”, “спасибо”, “how are you”          |
+```text
+data/user_commands.yaml
+```
 
----
+При запуске `Settings` объединяет оба файла. Поэтому пользовательские фразы работают и в чате, и в голосовом режиме.
 
-## 🧠 Как всё работает
+## Как Выполняется Команда
 
-1. Пользователь говорит фразу → текст распознаётся
-2. **Executor** вызывает `SmartMatcher` → ищет совпадение по `patterns`
-3. Если найдено совпадение:
+```text
+фраза пользователя
+-> очистка wake words и мусорных слов
+-> SmartMatcher
+-> Executor
+-> проверка safety
+-> SkillManager
+-> функция в src/skills/
+-> ответ + история
+```
 
-   * Если категория = **skills** → вызывается функция из `src/skills/`
-   * Если категория = **meta** → выполняется системное действие (например, перезапуск)
-   * Если категория = **smalltalk** → возвращается готовый ответ
-4. Если ничего не найдено → ассистент использует AI fallback (`GeminiSkill` или другой LLM)
-
----
-
-## 📂 Структура `commands.yaml`
-
-Файл `commands.yaml` делится на разделы, каждый из которых описывает группу команд:
+## Структура YAML
 
 ```yaml
 skills:
-  system:
-    description: "Системные команды"
+  rutube:
+    description: Поиск на Rutube
     commands:
       - patterns:
-          - "выключи компьютер"
-          - "shutdown"
-        action: system.shutdown
+          - найди на рутубе
+        action: rutube.search_rutube
         response:
-          ru: "Выключаю компьютер."
-          en: "Shutting down."
+          ru: Ищу на Rutube...
 ```
 
-Каждая команда содержит:
+`action` состоит из:
 
-| Поле                           | Назначение                               |
-| ------------------------------ | ---------------------------------------- |
-| **patterns**                   | список возможных фраз (триггеров)        |
-| **action**                     | путь к функции в `src/skills/`           |
-| **response**                   | ответ, если функция не вернула результат |
-| **category** *(необязательно)* | метка (`smalltalk`, `meta` и т.д.)       |
+```text
+модуль.функция
+```
 
----
+Пример:
 
-## 🧰 Пример полного `commands.yaml`
+```text
+rutube.search_rutube -> src/skills/rutube.py -> search_rutube()
+```
+
+## Основные Разделы Навыков
+
+| Раздел | Назначение |
+| --- | --- |
+| `assistant_control` | Завершение ассистента, язык. |
+| `assistant_info` | Справка, примеры, диагностика. |
+| `logs` | Журнал событий. |
+| `history` | История команд. |
+| `system` | Браузер и системные действия. |
+| `time_date` | Время и дата. |
+| `music` | Локальная музыка. |
+| `weather` | Погода. |
+| `news` | Новости. |
+| `notes` | Заметки. |
+| `reminders` | Таймеры и напоминания. |
+| `rutube` | Поиск видео на Rutube. |
+| `translator` | Перевод текста. |
+| `system_info` | Система и батарея. |
+| `system_control` | Скриншоты, громкость, очистка. |
+| `apps` | Открытие, закрытие и статус приложений. |
+
+Старые фразы про YouTube оставлены как алиасы, но открывают Rutube.
+
+## Пользовательские Фразы
+
+Обычный пользователь добавляет фразы через UI:
+
+```text
+Команды -> выбрать команду -> Добавить фразу
+```
+
+UI сохраняет их в `data/user_commands.yaml`. Встроенный `data/commands.yaml` при этом не меняется.
+
+## Опасные Команды
+
+Если действие влияет на систему или удаляет данные, добавьте его в:
 
 ```yaml
-skills:
-  assistant_control:
-    description: "Команды управления ассистентом"
-    commands:
-      - patterns:
-          - "выключись"
-          - "останови работу"
-          - "terminate"
-        action: assistant_control.shutdown_assistant
-        response:
-          ru: "Останавливаю работу, сэр."
-          en: "Stopping assistant."
-
-  system:
-    description: "Системные команды"
-    commands:
-      - patterns:
-          - "выключи компьютер"
-          - "turn off pc"
-        action: system.shutdown
-        response:
-          ru: "Выключаю компьютер."
-          en: "Turning off the PC."
-
-  search_web:
-    description: "Интернет поиск"
-    commands:
-      - patterns:
-          - "найди в интернете"
-          - "search online"
-        action: search_web.search_internet
-        response:
-          ru: "Ищу информацию в интернете..."
-          en: "Searching the web..."
-
-meta:
-  reload_dataset:
-    patterns:
-      - "перезагрузи команды"
-      - "reload dataset"
-    response:
-      ru: "Датасет обновлён."
-      en: "Dataset reloaded."
-
-  restart_skills:
-    patterns:
-      - "перезапусти навыки"
-      - "reload skills"
-    response:
-      ru: "Навыки перезапущены."
-      en: "Skills reloaded."
-
-smalltalk:
-  description: "Простые разговорные ответы"
-  commands:
-    - patterns:
-        - "ты молодец"
-        - "good job"
-      category: "smalltalk"
-      response:
-        ru: "Спасибо, сэр. Вы тоже на высоте!"
-        en: "Thank you, sir. You're amazing too!"
-
-    - patterns:
-        - "ты тупой"
-        - "stupid"
-      category: "smalltalk"
-      response:
-        ru: "Очень тонкое замечание, сэр."
-        en: "A very subtle remark, sir."
+safety:
+  dangerous_actions:
+    - system.shutdown
+    - system.restart
 ```
 
----
+Пользователь может включать/выключать подтверждение из вкладки `Команды`. Для выключения и перезагрузки ассистент сначала просит точную фразу `подтверждаю`, затем планирует действие с задержкой. Команда `отмени выключение` или `отмени перезагрузку` отменяет запланированное действие Windows.
 
-## 🧩 Как создаются функции (`skills`)
+## Хорошие Patterns
 
-Все функции навыков пишутся в `src/skills/`
-и принимают сигнатуру:
+- Короткие и естественные.
+- Без слишком общих однословных фраз, если действие опасное.
+- Отдельный intent - отдельное action.
+- Русские варианты важнее английских для текущей аудитории.
+- Для команд с аргументом нужна понятная ошибка, если аргумент не указан.
 
-```python
-def some_function(*args, **kwargs):
-    ...
+## Первые Команды Для Проверки
+
+| Фраза | Action |
+| --- | --- |
+| `что ты умеешь` | `assistant_info.list_capabilities` |
+| `примеры команд` | `assistant_info.show_example_commands` |
+| `проверь ассистента` | `assistant_info.run_diagnostics` |
+| `последние команды` | `history.recent_history` |
+| `где журнал` | `logs.log_status` |
+| `открой браузер` | `system.open_browser` |
+| `отмени выключение` | `system.cancel_shutdown` |
+| `найди на рутубе музыка` | `rutube.search_rutube` |
+| `какая погода` | `weather.get_weather` |
+| `последние новости` | `news.search_news` |
+| `поставь таймер на пять минут` | `reminder.set_timer` |
+
+## Как Добавить Навык
+
+1. Создайте модуль в `src/skills/`.
+2. Добавьте функцию с `*args, **kwargs`.
+3. Добавьте action в `data/commands.yaml`.
+4. Если действие опасное, добавьте его в `safety.dangerous_actions`.
+5. Добавьте тест, если поведение нетривиальное.
+6. Запустите:
+
+```powershell
+.\.venv\Scripts\python.exe diagnose.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
-
-Это делает их гибкими и универсальными.
-
-### 📦 Что передаётся в `kwargs`
-
-| Ключ            | Тип    | Описание                                       |
-| --------------- | ------ | ---------------------------------------------- |
-| `text`          | str    | исходная команда пользователя                  |
-| `lang`          | str    | текущий язык ассистента (`ru`, `en`)     |
-| `dataset`       | dict   | весь `commands.yaml`                           |
-| `config`        | dict   | глобальные настройки из `config.yaml`          |
-| `skill_manager` | объект | менеджер скиллов (можно вызвать другие)        |
-| `workers`       | list   | список активных потоков ассистента             |
-| `tts`           | объект | движок озвучивания (если нужно проговаривание) |
-
----
-
-## 🧠 Пример универсальной функции
-
-```python
-# src/skills/search_web.py
-import re
-import webbrowser
-
-def search_internet(*args, **kwargs):
-    """
-    Универсальная функция поиска в интернете.
-    Работает с любыми аргументами (*args, **kwargs).
-    """
-
-    dataset = kwargs.get("dataset", {})
-    query = kwargs.get("text")
-    lang = kwargs.get("lang", "ru")
-
-    if not query and args:
-        query = " ".join(str(a) for a in args if isinstance(a, str)).strip()
-
-    if not query:
-        return {"ru": "⚠️ Не понял, что искать.", "en": "I didn’t understand what to search."}.get(lang)
-
-    # Извлекаем паттерны
-    patterns = []
-    for cat, cat_data in dataset.get("skills", {}).items():
-        for cmd in cat_data.get("commands", []):
-            if cmd.get("action") == "search_web.search_internet":
-                patterns.extend(cmd.get("patterns", []))
-
-    clean_query = query.lower()
-    for pattern in patterns:
-        clean_query = re.sub(re.escape(pattern.lower()), "", clean_query, flags=re.IGNORECASE)
-
-    clean_query = re.sub(r"\b(край|cry)[,]*", "", clean_query, flags=re.IGNORECASE)
-    clean_query = clean_query.strip()
-
-    if not clean_query:
-        return "⚠️ Не понял, что искать."
-
-    webbrowser.open(f"https://www.google.com/search?q={clean_query}")
-    return f"🔎 Ищу в интернете: {clean_query}"
-```
-
----
-
-## 🪄 Пример: создать новую функцию
-
-### 1. Создай файл `src/skills/example_skill.py`
-
-```python
-def say_hello(*args, **kwargs):
-    text = kwargs.get("text", "")
-    name = text.replace("поздоровайся с", "").strip()
-    return f"Привет, {name}!" if name else "Привет, сэр!"
-```
-
-### 2. Добавь в `commands.yaml`
-
-```yaml
-skills:
-  example:
-    description: "Пример пользовательской функции"
-    commands:
-      - patterns:
-          - "поздоровайся"
-          - "скажи привет"
-        action: example.say_hello
-        response:
-          ru: "Привет, сэр!"
-```
-
----
-
-## 🔧 Как работает `SkillManager`
-
-```python
-class SkillManager:
-    def __init__(self, config, dataset):
-        self.config = config
-        self.dataset = dataset
-        self.skills = self._load_skills()
-
-    def _load_skills(self):
-        # динамическая загрузка модулей из src/skills/
-        ...
-
-    def execute(self, action, text=None, *args, **kwargs):
-        try:
-            module_name, func_name = action.split(".")
-            module = self.skills.get(module_name)
-            func = getattr(module, func_name, None)
-            if not func:
-                return f"⚠️ Функция '{func_name}' не найдена."
-            kwargs.update({
-                "dataset": self.dataset,
-                "config": self.config,
-                "text": text
-            })
-            return func(*args, **kwargs)
-        except Exception as e:
-            return f"❌ Ошибка при выполнении: {e}"
-```
-
----
-
-## 🧭 Расширение функционала
-
-Ты можешь:
-
-* Добавлять свои **категории** в `commands.yaml` (например, `ai_tools`, `developer_tools`)
-* Делать свои **meta-команды** для перезагрузки подсистем
-* Добавлять **fallback AI-ответы** при отсутствии совпадений
-* Делать команды с **условиями** (например, проверка времени суток)
-
----
-
-## ⚡ Советы по оптимизации
-
-| 💡 Советы                                                            | 🧾 Объяснение                                             |
-| -------------------------------------------------------------------- | --------------------------------------------------------- |
-| **Используй `*args, **kwargs`**                                      | не нужно менять сигнатуру при добавлении новых параметров |
-| **Передавай `dataset` в kwargs**                                     | можно анализировать другие паттерны                       |
-| **Используй “patterns” максимально разнообразно**                    | улучшает точность SmartMatcher                            |
-| **Для сложных функций используй context (config, workers)**          | чтобы вызывать системные методы                           |
-| **Отделяй smalltalk в отдельный блок**                               | чтобы не мешал логике команд                              |
-| **В meta-командах не указывай action**, если не требуется выполнение | они могут просто отдавать `response`                      |
-
----
-
-## 🎯 Пример добавления “умной” команды
-
-```yaml
-skills:
-  time_info:
-    description: "Команды для времени"
-    commands:
-      - patterns:
-          - "который час"
-          - "what time is it"
-        action: time_info.tell_time
-        response:
-          ru: "Сейчас {time}."
-          en: "It's {time} now."
-```
-
-```python
-# src/skills/time_info.py
-from datetime import datetime
-
-def tell_time(*args, **kwargs):
-    lang = kwargs.get("lang", "ru")
-    now = datetime.now().strftime("%H:%M")
-    responses = {
-        "ru": f"Сейчас {now}.",
-        "en": f"It's {now} now."
-    }
-    return responses.get(lang, responses["ru"])
-```
-
----
-
-## ✅ Резюме
-
-| Компонент                       | Назначение                                             |
-| ------------------------------- | ------------------------------------------------------ |
-| **commands.yaml**               | хранит все команды, их паттерны и ответы               |
-| **SmartMatcher**                | находит совпадения с командами                         |
-| **Executor**                    | управляет логикой ответа (meta / skills / smalltalk)   |
-| **SkillManager**                | вызывает соответствующую функцию                       |
-| **Функции с `*args, **kwargs`** | гибкий способ писать навыки без ограничения параметров |
-

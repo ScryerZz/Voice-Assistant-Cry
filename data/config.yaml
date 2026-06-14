@@ -1,54 +1,160 @@
-# === Основные настройки голоса ===
-voice_enabled: true          # Включить/выключить голосовое воспроизведение
-voice_engine: "silero"       # "silero" (реалистичный, офлайн) или "pyttsx3" (классический офлайн)
-voice_speed: 180             # Скорость речи (для pyttsx3)
-voice_volume: 1.0            # Громкость (0.0 - 1.0)
-voice_gender: "female"       # "male" | "female" (используется для выбора Silero speaker)
-voice_speaker: "aidar"        # Имя спикера (Silero): aidar, baya, kseniya, xenia, eugene, en_0, en_1 и т.д.
-
-# === Настройки распознавания ===
-language: "ru-RU"            # Язык распознавания по умолчанию
-wake_word: "край"           # Слово-пробуждение (если используешь активацию)
+voice_enabled: false
+voice_engine: silero
+voice_speed: 180
+voice_volume: 1.0
+voice_gender: female
+voice_speaker: aidar
+language: ru-RU
+wake_word: край
 wake_words:
-  ru: ["край"]
-  en: ["cry"]
-
-# === Настройки ассистента ===
+  ru:
+  - край
+  en:
+  - cry
+recognition:
+  online_listen_seconds: 5
+  offline_listen_timeout_seconds: 8
+  audio_queue_timeout_seconds: 1.0
+  recover_after_errors: 3
+  miss_threshold: 3
+  repeat_prompt_enabled: true
+matcher:
+  threshold: 68
+  partial_threshold: 78
+  smalltalk_threshold: 45
+  min_partial_length: 5
 assistant:
-  name: "Cry"             # Имя голосового ассистента
-  default_language: "ru"     # Язык по умолчанию: ru | en
-  voice: "default"           # Голос по умолчанию (можно менять в коде или командами)
-  personality: "friendly"    # "friendly" | "professional" | "funny" (можно использовать для будущих режимов)
-  
-  # === AI интеграция (YandexGPT) ===
-  ai_enabled: false           # Включить AI для ответов на неизвестные команды
-  yandexgpt_api_key: ""      # API ключ из Yandex Cloud (создайте на cloud.yandex.ru)
-  yandex_folder_id: ""       # Folder ID из Yandex Cloud (найдите в консоли)
-
-# === Режимы работы ===
-debug: true                 # Включить подробный лог
-offline_mode: true           # Работать без интернета, если True
-auto_switch_mode: true       # Автоматически переключаться между онлайн/офлайн
-
-# === Папки и ресурсы ===
+  name: Cry
+  default_language: ru
+  voice: default
+  personality: friendly
+  ai_enabled: true
+  yandexgpt_api_key: AQVNzdaTgqmKKHkSVd--tQYka1cFWbB4c193Dx2t
+  yandex_folder_id: b1gfp46940a5akurro5v
+debug: true
+logging:
+  dir: data/logs
+  file: assistant.log
+  level: INFO
+  max_bytes: 1000000
+  backup_count: 5
+offline_mode: true
+auto_switch_mode: false
+first_run_completed: true
+startup:
+  launch_on_login: false
+  start_minimized_to_tray: true
+  minimize_to_tray_on_close: true
+  start_assistant_on_launch: false
+privacy:
+  redact_secrets_in_exports: true
+  include_logs_in_reports: true
+  include_history_in_reports: false
+  crash_summary_lines: 80
+profiles:
+  active: main
+  items:
+    main:
+      label: main
+      created_at: '2026-06-14 20:08:06'
+      settings:
+        assistant.name: Cry
+        assistant.default_language: ru
+        assistant.voice: default
+        assistant.personality: friendly
+        voice_enabled: false
+        voice_engine: silero
+        voice_speed: 180
+        voice_volume: 1.0
+        voice_gender: female
+        voice_speaker: aidar
+        language: ru-RU
+        wake_word: край
+        wake_words:
+          ru:
+          - край
+          en:
+          - cry
+        offline_mode: true
+        auto_switch_mode: false
+        privacy:
+          redact_secrets_in_exports: true
+          include_logs_in_reports: true
+          include_history_in_reports: false
+          crash_summary_lines: 80
 paths:
-  datasets: "data/commands.yaml"
-  tts_models: "data/models/tts"
-  stt_models: "data/models/stt"
-  cache_dir: "data/cache"
-
-# === Дополнительно ===
+  datasets: data/commands.yaml
+  user_commands: data/user_commands.yaml
+  tts_models: data/models/tts
+  stt_models: data/models/stt
+  cache_dir: data/cache
+  database: data/assistant.sqlite3
 silero:
-  ru_speakers: ["aidar", "baya", "kseniya", "xenia", "eugene"]
-  en_speakers: ["en_0", "en_1", "en_2"]
+  ru_speakers:
+  - aidar
+  - baya
+  - kseniya
+  - xenia
+  - eugene
+  en_speakers:
+  - en_0
+  - en_1
+  - en_2
   sample_rate: 48000
-  use_cuda: true             # Использовать GPU (если доступно)
-
-# === Погода (OpenWeatherMap) ===
+  use_cuda: true
 weather:
-  api_key: ""                # Получите бесплатный API ключ на https://openweathermap.org/api
-  default_city: "Казань"     # Город по умолчанию
-
+  api_key: 1f70a53f14b4b3a2ac6e4f0f475f9f18
+  default_city: Казань
 news:
-  api_key: ""                # Получите бесплатный API ключ на https://newsapi.org
-                             # Без ключа открывается Google News
+  api_key: 1c484ac94e54476ca0646d6ebacf2151
+system_power:
+  shutdown_delay_seconds: 30
+safety:
+  confirm_dangerous_commands: true
+  confirmation_timeout_seconds: 15
+  dangerous_min_score: 90
+  dangerous_actions:
+  - apps.close_app
+  - apps.close_discord
+  - apps.close_flstudio
+  - apps.close_msexcel
+  - apps.close_mspowerpoint
+  - apps.close_msword
+  - apps.close_steam
+  - apps.close_telegram
+  - apps.close_yamusic
+  - history.clear_history
+  - logs.clear_logs
+  - notes.clear_notes
+  - system.restart
+  - system.shutdown
+  - system.sleep
+  - system_control.clean_system
+  - system_control.clear_downloads
+  - system_control.clear_recycle_bin
+  - system_control.clear_temp
+apps:
+  telegram:
+    path: C:/Users/coderzxc/AppData/Roaming/Telegram Desktop/Telegram.exe
+    process: Telegram.exe
+  yamusic:
+    path: ''
+    process: Яндекс Музыка.exe
+  discord:
+    path: C:/Users/coderzxc/AppData/Local/Discord/Update.exe
+    process: Discord.exe
+  steam:
+    path: C:/Program Files (x86)/Steam/steam.exe
+    process: steam.exe
+  flstudio:
+    path: ''
+    process: FL64.exe
+  msword:
+    path: ''
+    process: WINWORD.EXE
+  msexcel:
+    path: ''
+    process: EXCEL.EXE
+  mspowerpoint:
+    path: ''
+    process: POWERPNT.EXE

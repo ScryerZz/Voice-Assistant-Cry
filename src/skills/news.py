@@ -1,6 +1,7 @@
 import re
 import requests
 import webbrowser
+from urllib.parse import quote_plus
 
 
 def search_news(*args, **kwargs):
@@ -18,7 +19,7 @@ def search_news(*args, **kwargs):
     if not api_key:
         query = _extract_query(text)
         if query:
-            url = f"https://news.google.com/search?q={query}"
+            url = f"https://news.google.com/search?q={quote_plus(query)}"
             webbrowser.open(url)
             return f"📰 Открываю новости по запросу: {query}"
         else:
@@ -27,40 +28,61 @@ def search_news(*args, **kwargs):
     
     # Извлекаем тему для поиска
     query = _extract_query(text)
-    
-    if not query:
-        return "⚠️ Не понял, какие новости искать."
-    
+
     try:
-        # Запрос к NewsAPI
-        url = "https://newsapi.org/v2/everything"
-        params = {
-            "q": query,
-            "apiKey": api_key,
-            "language": "ru",
-            "sortBy": "publishedAt",
-            "pageSize": 3
-        }
+        if query:
+            url = "https://newsapi.org/v2/everything"
+            params = {
+                "q": query,
+                "apiKey": api_key,
+                "language": "ru",
+                "sortBy": "publishedAt",
+                "pageSize": 3,
+            }
+        else:
+            url = "https://newsapi.org/v2/top-headlines"
+            params = {
+                "apiKey": api_key,
+                "country": "ru",
+                "pageSize": 3,
+            }
         
         response = requests.get(url, params=params, timeout=5)
         
         if response.status_code == 200:
             data = response.json()
             articles = data.get("articles", [])
+            if not articles and not query:
+                fallback_response = requests.get(
+                    "https://newsapi.org/v2/everything",
+                    params={
+                        "q": "Россия",
+                        "apiKey": api_key,
+                        "language": "ru",
+                        "sortBy": "publishedAt",
+                        "pageSize": 3,
+                    },
+                    timeout=5,
+                )
+                if fallback_response.status_code == 200:
+                    articles = fallback_response.json().get("articles", [])
             
             if articles:
                 # Открываем первые 3 новости в браузере
                 for article in articles[:3]:
-                    webbrowser.open(article["url"])
+                    if article.get("url"):
+                        webbrowser.open(article["url"])
                 
-                titles = [art["title"] for art in articles[:3]]
-                result = f"📰 Нашёл {len(articles)} новостей по запросу '{query}'. Открываю топ-3."
-                return result
+                if query:
+                    return f"📰 Нашёл {_news_count_phrase(len(articles))} по запросу «{query}». Открываю топ-3."
+                return f"📰 Нашёл {_news_count_phrase(len(articles))}. Открываю топ-3."
             else:
-                return f"📰 Новостей по запросу '{query}' не найдено."
+                if query:
+                    return f"📰 Новостей по запросу «{query}» не найдено."
+                return "📰 Свежие новости не найдены."
         
         elif response.status_code == 401:
-            return "⚠️ Неверный API ключ NewsAPI. Проверьте настройки."
+            return "⚠️ Неверный API-ключ NewsAPI. Проверьте настройки."
         else:
             return f"⚠️ Ошибка при получении новостей (код {response.status_code})."
     
@@ -68,7 +90,7 @@ def search_news(*args, **kwargs):
         return "⚠️ Превышено время ожидания ответа от сервера новостей."
     except requests.exceptions.ConnectionError:
         # Fallback - открываем Google News
-        url = f"https://news.google.com/search?q={query}"
+        url = f"https://news.google.com/search?q={quote_plus(query)}"
         webbrowser.open(url)
         return f"📰 Нет подключения к NewsAPI. Открываю Google News: {query}"
     except Exception as e:
@@ -86,12 +108,24 @@ def _extract_query(text: str) -> str:
     
     # Убираем служебные слова
     patterns = [
-        "новости", "новостей", "поищи новости", "найди новости",
-        "что нового", "последние новости", "свежие новости",
-        "news", "latest news", "search news", "find news"
+        "поищи свежие новости",
+        "найди свежие новости",
+        "поищи последние новости",
+        "найди последние новости",
+        "последние новости",
+        "свежие новости",
+        "поищи новости",
+        "найди новости",
+        "latest news",
+        "search news",
+        "find news",
+        "что нового",
+        "новостей",
+        "новости",
+        "news",
     ]
     
-    for pattern in patterns:
+    for pattern in sorted(patterns, key=len, reverse=True):
         text = re.sub(re.escape(pattern.lower()), "", text, flags=re.IGNORECASE)
     
     # Убираем предлоги
@@ -101,4 +135,17 @@ def _extract_query(text: str) -> str:
     query = text.strip()
     
     return query
+
+
+def _news_count_phrase(count: int) -> str:
+    count = int(count)
+    if 11 <= count % 100 <= 14:
+        word = "новостей"
+    elif count % 10 == 1:
+        word = "новость"
+    elif count % 10 in {2, 3, 4}:
+        word = "новости"
+    else:
+        word = "новостей"
+    return f"{count} {word}"
 

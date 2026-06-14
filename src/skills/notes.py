@@ -1,8 +1,6 @@
 import re
-from pathlib import Path
-from datetime import datetime
 
-NOTES_FILE = Path("data/notes.txt")
+from src.core.storage import AssistantStorage
 
 
 def add_note(*args, **kwargs):
@@ -11,7 +9,7 @@ def add_note(*args, **kwargs):
     Извлекает текст заметки из команды пользователя.
     """
     text = kwargs.get("text", "") or " ".join(str(a) for a in args if isinstance(a, str))
-    text = text.strip().lower()
+    text = text.strip()
     
     if not text:
         return "Не понял, что записать."
@@ -33,10 +31,8 @@ def add_note(*args, **kwargs):
         return "Не понял, что записать."
     
     try:
-        NOTES_FILE.parent.mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open(NOTES_FILE, "a", encoding="utf-8") as f:
-            f.write(f"[{timestamp}] {clean_text}\n")
+        storage = _storage(kwargs)
+        storage.add_note(clean_text)
         return f"Заметка добавлена: {clean_text}"
     except Exception as e:
         return f"Ошибка при добавлении заметки: {e}"
@@ -47,21 +43,14 @@ def read_notes(*args, **kwargs):
     Читает все заметки из файла.
     """
     try:
-        if not NOTES_FILE.exists():
+        storage = _storage(kwargs)
+        count = storage.count_notes()
+        if count == 0:
             return "Заметок пока нет."
-        
-        with open(NOTES_FILE, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-        
-        if not content:
-            return "Заметок пока нет."
-        
-        lines = content.split("\n")
-        count = len(lines)
-        
-        # Возвращаем последние 5 заметок для озвучки
-        last_notes = lines[-5:]
-        result = f"У вас {count} заметок. Последние: " + "; ".join(last_notes)
+
+        last_notes = storage.list_notes(limit=5)
+        formatted = [f"[{note['created_at']}] {note['text']}" for note in reversed(last_notes)]
+        result = f"У вас {count} заметок. Последние: " + "; ".join(formatted)
         
         return result
     except Exception as e:
@@ -73,9 +62,19 @@ def clear_notes(*args, **kwargs):
     Удаляет все заметки.
     """
     try:
-        if NOTES_FILE.exists():
-            NOTES_FILE.unlink()
+        storage = _storage(kwargs)
+        count = storage.clear_notes()
+        if count:
             return "Все заметки удалены."
         return "Нет заметок для удаления."
     except Exception as e:
         return f"Ошибка при удалении заметок: {e}"
+
+
+def _storage(kwargs) -> AssistantStorage:
+    storage = kwargs.get("storage")
+    if storage:
+        return storage
+    config = kwargs.get("config", {}) or {}
+    db_path = config.get("paths", {}).get("database")
+    return AssistantStorage(db_path)
