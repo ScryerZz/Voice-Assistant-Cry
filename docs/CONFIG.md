@@ -1,246 +1,246 @@
-# ⚙️ Документация по `config.yaml`
+# Конфигурация
 
-Файл `config.yaml` — это **основной конфигурационный файл ассистента**.
-Он управляет всеми глобальными настройками: голосом, распознаванием, языками, режимами, путями, API-ключами и пр.
+Основной файл настроек пользователя:
 
-Каждый параметр можно менять без изменения кода — ассистент автоматически применяет новые настройки при запуске или перезагрузке.
+```text
+data/config.yaml
+```
 
----
+Дефолты находятся в `src/core/config.py`. При загрузке проекта пользовательский YAML объединяется с дефолтами, поэтому отсутствующий ключ не обязан ломать запуск.
 
-## 🗂️ Общая структура
+Обычному пользователю лучше менять настройки через `run_settings.bat`.
+
+## Верхний Уровень
+
+| Ключ | Тип | Назначение |
+| --- | --- | --- |
+| `voice_enabled` | `bool` | Озвучивать ответы. |
+| `voice_engine` | `str` | `silero` или `pyttsx3`. |
+| `voice_speed` | `int` | Скорость `pyttsx3`. |
+| `voice_volume` | `float` | Громкость от `0.0` до `1.0`. |
+| `voice_gender` | `str` | Предпочитаемый пол голоса. |
+| `voice_speaker` | `str` | Спикер Silero. |
+| `language` | `str` | Локаль распознавания, например `ru-RU`. |
+| `wake_word` | `str` | Старый одиночный wake word для совместимости. |
+| `wake_words` | `dict` | Слова активации по языкам. |
+| `debug` | `bool` | Подробный лог. |
+| `offline_mode` | `bool` | Офлайн-режим распознавания. |
+| `auto_switch_mode` | `bool` | Автопереключение онлайн/офлайн. |
+| `first_run_completed` | `bool` | Завершён ли мастер первого запуска. |
+| `startup` | `dict` | Автозапуск Windows и поведение трея. |
+| `privacy` | `dict` | Настройки приватности support-экспорта. |
+| `profiles` | `dict` | Профили ассистента. |
+
+## Assistant
 
 ```yaml
-# === Основные настройки голоса ===
+assistant:
+  name: Cry
+  default_language: ru
+  voice: default
+  personality: friendly
+  ai_enabled: true
+  yandexgpt_api_key: ''
+  yandex_folder_id: ''
+```
+
+| Ключ | Назначение |
+| --- | --- |
+| `assistant.name` | Имя в UI и ответах. |
+| `assistant.default_language` | `ru` или `en`. |
+| `assistant.voice` | Зарезервированный профиль голоса. |
+| `assistant.personality` | Стиль общения. |
+| `assistant.ai_enabled` | Использовать ЯндексGPT для неизвестных фраз. |
+| `assistant.yandexgpt_api_key` | API-ключ ЯндексGPT. |
+| `assistant.yandex_folder_id` | ID каталога Яндекс Облака. |
+
+ЯндексGPT работает только если включён `ai_enabled` и заполнены оба поля: API-ключ и ID каталога.
+
+## Recognition
+
+```yaml
+recognition:
+  online_listen_seconds: 5
+  offline_listen_timeout_seconds: 8
+  audio_queue_timeout_seconds: 1.0
+  recover_after_errors: 3
+  miss_threshold: 3
+  repeat_prompt_enabled: true
+```
+
+| Ключ | Назначение |
+| --- | --- |
+| `online_listen_seconds` | Длина онлайн-записи. |
+| `offline_listen_timeout_seconds` | Окно ожидания Vosk. |
+| `audio_queue_timeout_seconds` | Тайм-аут очереди аудио. |
+| `recover_after_errors` | Ошибок до восстановления микрофонного потока. |
+| `miss_threshold` | Пустых распознаваний до подсказки повторить. |
+| `repeat_prompt_enabled` | Говорить ли `повторите`. |
+
+## Matcher
+
+```yaml
+matcher:
+  threshold: 68
+  partial_threshold: 78
+  smalltalk_threshold: 45
+  min_partial_length: 5
+```
+
+Если ассистент часто не находит команды, снижайте пороги осторожно. Если выполняет не те команды, повышайте.
+
+## Voice / TTS
+
+```yaml
 voice_enabled: true
-voice_engine: "silero"
+voice_engine: silero
 voice_speed: 180
 voice_volume: 1.0
-voice_gender: "female"
-voice_speaker: "aidar"
-
-# === Настройки распознавания ===
-language: "ru-RU"
-wake_word: "край"
-wake_words:
-  ru: ["край"]
-  en: ["cry"]
-
-# === Настройки ассистента ===
-assistant:
-  name: "Cry"
-  default_language: "ru"
-  voice: "default"
-  personality: "friendly"
-  gemeni_enabled: false
-  gemeni_api_key: ""
-
-# === Режимы работы ===
-debug: true
-offline_mode: true
-auto_switch_mode: true
-
-# === Папки и ресурсы ===
-paths:
-  datasets: "data/commands.yaml"
-  tts_models: "data/models/tts"
-  stt_models: "data/models/stt"
-  cache_dir: "data/cache"
-
-# === Дополнительно ===
+voice_gender: female
+voice_speaker: aidar
 silero:
-  ru_speakers: ["aidar", "baya", "kseniya", "xenia", "eugene"]
-  en_speakers: ["en_0", "en_1", "en_2"]
+  ru_speakers: [aidar, baya, kseniya, xenia, eugene]
+  en_speakers: [en_0, en_1, en_2]
   sample_rate: 48000
   use_cuda: true
 ```
 
----
+Silero даёт более качественный голос, но зависит от Torch и модели `.pt`. Если модель отсутствует, runtime падает обратно на `pyttsx3`.
 
-## 🎙️ Раздел 1: Основные настройки голоса
-
-Этот блок управляет **синтезом речи (Text-to-Speech)**.
-
-| Параметр        | Тип     | Значение по умолчанию | Описание                                                                                                      |
-| --------------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `voice_enabled` | `bool`  | `true`                | Включает или выключает озвучку ответов ассистента                                                             |
-| `voice_engine`  | `str`   | `"silero"`            | Определяет TTS-движок: `"silero"` — реалистичный офлайн-голос, `"pyttsx3"` — стандартный офлайн               |
-| `voice_speed`   | `int`   | `180`                 | Скорость речи (для `pyttsx3`), чем выше — тем быстрее                                                         |
-| `voice_volume`  | `float` | `1.0`                 | Громкость (0.0 — тише, 1.0 — максимум)                                                                        |
-| `voice_gender`  | `str`   | `"female"`            | Гендер голоса: `"male"` или `"female"`                                                                        |
-| `voice_speaker` | `str`   | `"aidar"`             | Имя конкретного диктора для Silero. Поддерживаются `aidar`, `baya`, `kseniya`, `eugene`, `en_0`, и др. |
-
-📘 **Пример: смена диктора и скорости**
-
-```yaml
-voice_enabled: true
-voice_engine: "silero"
-voice_speaker: "baya"
-voice_speed: 190
-```
-
-💡 **Совет:**
-
-* Silero звучит реалистично и не требует интернета.
-* Для английского языка указывай спикеров из соответствующего списка (`en_speakers`).
-
----
-
-## 🧠 Раздел 2: Настройки распознавания речи (STT)
-
-| Параметр     | Тип    | Описание                                                                  |
-| ------------ | ------ | ------------------------------------------------------------------------- |
-| `language`   | `str`  | Язык распознавания по умолчанию, например `"ru-RU"`, `"en-US"`, |
-| `wake_word`  | `str`  | Основное слово-пробуждение для активации ассистента                       |
-| `wake_words` | `dict` | Список вариантов для разных языков                                        |
-
-📘 **Пример:**
-
-```yaml
-language: "en-US"
-wake_word: "cry"
-wake_words:
-  en: ["cry", "hey cry", "ok cry"]
-```
-
-💡 **Совет:**
-Добавляй варианты произношения — это улучшит точность пробуждения.
-Ассистент может активироваться по любому слову из списка `wake_words[текущий_язык]`.
-
----
-
-## 🤖 Раздел 3: Настройки ассистента
-
-| Параметр                     | Тип    | Описание                                                                                              |
-| ---------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| `assistant.name`             | `str`  | Имя ассистента, используемое в ответах или UI                                                         |
-| `assistant.default_language` | `str`  | Язык по умолчанию (`ru`, `en`)                                                                  |
-| `assistant.voice`            | `str`  | Какой голос использовать (например, `"default"`, `"male"`, `"female"`)                                |
-| `assistant.personality`      | `str`  | Личность ассистента: `"friendly"`, `"professional"`, `"funny"` — можно использовать для стиля общения |
-| `assistant.gemeni_enabled`   | `bool` | Включить поддержку **Gemini / LLM-API**                                                               |
-| `assistant.gemeni_api_key`   | `str`  | Ключ для подключения к Gemini или другому AI-провайдеру                                               |
-
-📘 **Пример: включение Gemini**
-
-```yaml
-assistant:
-  name: "Cry"
-  default_language: "en"
-  personality: "professional"
-  gemeni_enabled: true
-  gemeni_api_key: "YOUR_API_KEY_HERE"
-```
-
-💡 **Совет:**
-При активном `gemeni_enabled` ассистент будет использовать онлайн-мозг (AI) для сложных вопросов.
-В офлайн-режиме он будет работать с локальными скиллами.
-
----
-
-## ⚡ Раздел 4: Режимы работы
-
-| Параметр           | Тип    | Описание                                                      |
-| ------------------ | ------ | ------------------------------------------------------------- |
-| `debug`            | `bool` | Включает подробные логи в консоль                             |
-| `offline_mode`     | `bool` | Работает только с локальными модулями без интернета           |
-| `auto_switch_mode` | `bool` | Автоматически переключает онлайн/офлайн при потере соединения |
-
-📘 **Пример: отладочный офлайн-режим**
-
-```yaml
-debug: true
-offline_mode: true
-auto_switch_mode: true
-```
-
-💡 **Совет:**
-В продакшене лучше выключать `debug`, чтобы ускорить работу.
-Если `auto_switch_mode = true`, ассистент будет сам включать офлайн-режим при отсутствии сети.
-
----
-
-## 📁 Раздел 5: Пути и ресурсы
-
-Указывает, где находятся модели и файлы данных.
-
-| Параметр           | Тип   | Описание                                 |
-| ------------------ | ----- | ---------------------------------------- |
-| `paths.datasets`   | `str` | Путь к `commands.yaml`                   |
-| `paths.tts_models` | `str` | Папка с моделями Silero                  |
-| `paths.stt_models` | `str` | Папка с моделями распознавания речи      |
-| `paths.cache_dir`  | `str` | Временный кэш для хранения аудио и логов |
-
-📘 **Пример:**
+## Paths
 
 ```yaml
 paths:
-  datasets: "data/commands.yaml"
-  tts_models: "data/models/tts"
-  stt_models: "data/models/stt"
-  cache_dir: "data/cache"
+  datasets: data/commands.yaml
+  user_commands: data/user_commands.yaml
+  tts_models: data/models/tts
+  stt_models: data/models/stt
+  cache_dir: data/cache
+  database: data/assistant.sqlite3
 ```
 
-💡 **Совет:**
-Можно указать абсолютные пути, если ассистент запускается как системный сервис.
-При разработке достаточно относительных (`data/...`).
+Относительные пути считаются от корня проекта.
 
----
-
-## 🧬 Раздел 6: Дополнительные настройки Silero
-
-| Параметр             | Тип         | Описание                                                        |
-| -------------------- | ----------- | --------------------------------------------------------------- |
-| `silero.ru_speakers` | `list[str]` | Русские спикеры (`aidar`, `baya`, `kseniya`, `xenia`, `eugene`) |
-| `silero.en_speakers` | `list[str]` | Английские спикеры (`en_0`, `en_1`, `en_2`)                     |
-| `silero.sample_rate` | `int`       | Частота дискретизации аудио (обычно `48000`)                    |
-| `silero.use_cuda`    | `bool`      | Использовать GPU, если доступно                                 |
-
-📘 **Пример:**
+## Startup / Tray
 
 ```yaml
-silero:
-  ru_speakers: ["aidar", "baya", "kseniya"]
-  en_speakers: ["en_0", "en_1"]
-  sample_rate: 48000
-  use_cuda: true
+startup:
+  launch_on_login: false
+  start_minimized_to_tray: true
+  minimize_to_tray_on_close: true
+  start_assistant_on_launch: false
 ```
 
-💡 **Совет:**
-Если у тебя есть GPU (NVIDIA), включи `use_cuda: true` — это ускорит синтез голоса почти в 2-3 раза.
-Если работаешь на CPU — оставь `false`.
+| Ключ | Назначение |
+| --- | --- |
+| `launch_on_login` | Создавать ярлык Cry в автозагрузке текущего пользователя Windows. |
+| `start_minimized_to_tray` | При автозапуске открывать приложение скрытым в системном трее. |
+| `minimize_to_tray_on_close` | Сворачивать окно в трей при нажатии на крестик. |
+| `start_assistant_on_launch` | Автоматически запускать голосовой runtime после открытия UI. |
 
----
+Это не Windows Service. Ассистент запускается в пользовательской сессии, чтобы иметь доступ к UI, микрофону и системному трею.
 
-## 🧭 Как ассистент использует `config.yaml` в коде
+## Profiles
 
-```python
-import yaml
-
-def load_config(path="config.yaml"):
-    with open(path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-    return config
-
-config = load_config()
-
-if config["voice_enabled"]:
-    print(f"🔊 Voice engine: {config['voice_engine']}")
-if config["debug"]:
-    print("🧩 Debug mode ON")
+```yaml
+profiles:
+  active: home
+  items:
+    home:
+      label: Дом
+      created_at: '2026-06-10 12:00:00'
+      settings:
+        assistant.name: Cry
+        assistant.default_language: ru
+        voice_engine: silero
 ```
 
-Ассистент подгружает настройки при старте,
-и передаёт `config` в каждый модуль (через `**kwargs`).
+Профили хранят персонализацию: язык, голос, wake words, режим и приватность. API-ключи и пути приложений не сохраняются.
 
----
+## Privacy
 
-## ✅ Резюме
+```yaml
+privacy:
+  redact_secrets_in_exports: true
+  include_logs_in_reports: true
+  include_history_in_reports: false
+  crash_summary_lines: 80
+```
 
-| Раздел                       | Назначение                        |
-| ---------------------------- | --------------------------------- |
-| **Голосовые параметры**      | Управление синтезом речи          |
-| **Распознавание речи (STT)** | Языки и пробуждение               |
-| **Настройки ассистента**     | Имя, язык, личность, API-ключи    |
-| **Режимы работы**            | Debug, офлайн и авто-переключение |
-| **Пути и ресурсы**           | Расположение моделей и данных     |
-| **Silero**                   | Параметры для TTS-движка          |
+| Ключ | Назначение |
+| --- | --- |
+| `redact_secrets_in_exports` | Скрывать API-ключи в support-отчётах. |
+| `include_logs_in_reports` | Включать последние строки логов. |
+| `include_history_in_reports` | Включать историю команд. По умолчанию выключено. |
+| `crash_summary_lines` | Сколько строк ошибок включать в crash summary. |
 
+## Weather / News
+
+```yaml
+weather:
+  api_key: ''
+  default_city: Казань
+news:
+  api_key: ''
+```
+
+Если ключи пустые, навыки должны вернуть понятное сообщение или открыть fallback.
+
+## System Power
+
+```yaml
+system_power:
+  shutdown_delay_seconds: 30
+```
+
+`shutdown_delay_seconds` задаёт задержку перед выключением или перезагрузкой после подтверждения. Значение ограничивается безопасным диапазоном 5-600 секунд.
+
+## Safety
+
+```yaml
+safety:
+  confirm_dangerous_commands: true
+  confirmation_timeout_seconds: 15
+  dangerous_min_score: 90
+  dangerous_actions:
+    - system.shutdown
+    - system.restart
+    - history.clear_history
+```
+
+Все действия, которые закрывают приложения, очищают данные, выключают/перезагружают систему или удаляют файлы, должны быть в `dangerous_actions`.
+
+## Apps
+
+```yaml
+apps:
+  telegram:
+    path: C:/Users/user/AppData/Roaming/Telegram Desktop/Telegram.exe
+    process: Telegram.exe
+```
+
+Каждая запись может содержать:
+
+| Ключ | Назначение |
+| --- | --- |
+| `display_name` | Имя в UI и ответах. |
+| `aliases` | Дополнительные названия для распознавания. |
+| `path` | Путь к `.exe` или ярлыку. |
+| `process` | Имя процесса для закрытия/статуса. |
+
+## Runtime Control
+
+```json
+{
+  "voice_listening_enabled": true
+}
+```
+
+Файл `data/runtime/control.json` используется UI-переключателем голоса и читается работающим `main.py`.
+
+## Проверки После Изменений
+
+```powershell
+.\.venv\Scripts\python.exe diagnose.py
+.\.venv\Scripts\python.exe -m compileall main.py ui.py diagnose.py src tests
+```

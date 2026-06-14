@@ -1,4 +1,3 @@
-# ...existing code...
 from rapidfuzz import process, fuzz
 from functools import lru_cache
 import re
@@ -17,6 +16,10 @@ class SmartMatcher:
         self.threshold = threshold
         self.debug = debug
         self.config = config or {}
+        matcher_config = self.config.get("matcher", {}) or {}
+        self.partial_threshold = int(matcher_config.get("partial_threshold", max(78, self.threshold)))
+        self.smalltalk_threshold = int(matcher_config.get("smalltalk_threshold", max(35, self.threshold - 25)))
+        self.min_partial_length = int(matcher_config.get("min_partial_length", 5))
         # Собираем wake-words из конфигурации (если есть)
         self.wake_words = set()
         try:
@@ -37,6 +40,11 @@ class SmartMatcher:
 
         # паттерны будут содержать: (orig, normalized, category, key, action, response)
         self.patterns = self._build_patterns()
+        self.exact_patterns = {
+            pattern[1]: pattern
+            for pattern in self.patterns
+            if pattern[1]
+        }
 
     def log(self, *args):
         if self.debug:
@@ -89,7 +97,9 @@ class SmartMatcher:
             return ""
 
         # нормализация базовая
-        text = re.sub(r"[^\w\s']", " ", str(text), flags=re.UNICODE).lower()
+        text = str(text).replace("ё", "е").lower()
+        text = re.sub(r"[^\w\s']", " ", text, flags=re.UNICODE)
+        text = re.sub(r"\b(cry|край|к рай|краю|крае)\b", " ", text, flags=re.UNICODE)
 
         # удаляем wake-words в разных позициях
         if self.wake_words:
@@ -99,8 +109,12 @@ class SmartMatcher:
 
         # расширенные стоп-слова на двух языках
         stopwords = {
-            "ru": ["пожалуйста", "пжлст", "скажи", "скажи мне", "потом", "и", "ещё", "еще", "пожалуйстa", "но", "так", "вообще", "иногда", "хорошо", "давай", "да"],
-            "en": ["please", "and", "then", "say", "tell", "now", "hey", "ok", "please"]
+            "ru": [
+                "пожалуйста", "пжлст", "скажи", "скажи мне", "потом", "и", "еще",
+                "пожалуйстa", "но", "так", "вообще", "иногда", "хорошо", "давай",
+                "да", "ну", "мне", "ты", "можешь", "можно", "сейчас", "ладно",
+            ],
+            "en": ["please", "and", "then", "say", "tell", "now", "hey", "ok", "can", "you"]
         }
         sw = set()
         for v in stopwords.values():
@@ -108,6 +122,28 @@ class SmartMatcher:
 
         tokens = [t for t in text.split() if t and t not in sw]
         return " ".join(tokens).strip()
+
+    def _result_from_entry(self, entry, score: float) -> dict:
+        return {
+            "pattern": entry[0],
+            "normalized_pattern": entry[1],
+            "category": entry[2],
+            "key": entry[3],
+            "action": entry[4],
+            "response": entry[5],
+            "score": round(float(score), 2),
+        }
+
+    def _fuzzy_candidate_entries(self, normalized: str):
+        normalized_word_count = len(normalized.split())
+        if normalized_word_count <= 1:
+            return self.patterns
+        # Single-word commands are useful as exact commands, but they are risky
+        # fuzzy candidates because token_set_ratio can over-match long phrases.
+        return [
+            entry for entry in self.patterns
+            if len(str(entry[1]).split()) > 1
+        ]
 
     @lru_cache(maxsize=2048)
     def _best_for_phrase(self, phrase: str):
@@ -118,61 +154,46 @@ class SmartMatcher:
         if not normalized:
             return None
 
+        exact = self.exact_patterns.get(normalized)
+        if exact:
+            return self._result_from_entry(exact, 100)
+
+        candidate_entries = self._fuzzy_candidate_entries(normalized)
         # choices — нормализованные паттерны
-        choices = [p[1] for p in self.patterns]
+        choices = [p[1] for p in candidate_entries]
         if not choices:
             return None
 
         # 1) основной проход — token_set_ratio
         best_a = process.extractOne(normalized, choices, scorer=fuzz.token_set_ratio)
-        # 2) частичный проход — partial_ratio (лучше для длинных/фрагментированных фраз)
+        # 2) token_sort_ratio полезен для переставленных слов
+        best_sort = process.extractOne(normalized, choices, scorer=fuzz.token_sort_ratio)
+        # 3) частичный проход — partial_ratio (лучше для длинных/фрагментированных фраз)
         best_b = process.extractOne(normalized, choices, scorer=fuzz.partial_ratio)
 
-        candidates = [b for b in (best_a, best_b) if b]
+        candidates = [b for b in (best_a, best_sort) if b]
         if not candidates:
             return None
 
         best = max(candidates, key=lambda x: x[1])  # (match, score, idx)
         score = best[1]
         idx = best[2]
-        pattern_entry = self.patterns[idx]
+        pattern_entry = candidate_entries[idx]
         category = pattern_entry[2]
 
         # если хороший score >= порога — принимаем
         if score >= self.threshold:
-            return {
-                "pattern": pattern_entry[0],
-                "category": category,
-                "key": pattern_entry[3],
-                "action": pattern_entry[4],
-                "response": pattern_entry[5],
-                "score": score,
-            }
+            return self._result_from_entry(pattern_entry, score)
 
         # fallback 1: для smalltalk допускаем низкий порог (короткие/эмоциональные фразы)
-        if category == "smalltalk" and score >= max(30, self.threshold - 30):
-            return {
-                "pattern": pattern_entry[0],
-                "category": category,
-                "key": pattern_entry[3],
-                "action": pattern_entry[4],
-                "response": pattern_entry[5],
-                "score": score,
-            }
+        if category == "smalltalk" and score >= self.smalltalk_threshold:
+            return self._result_from_entry(pattern_entry, score)
 
         # fallback 2: пытаемся ещё раз с более мягким порогом и partial scorer
-        fallback_threshold = max(45, int(self.threshold * 0.7))
-        if best_b and best_b[1] >= fallback_threshold:
+        if best_b and best_b[1] >= self.partial_threshold and len(normalized.split()) >= self.min_partial_length:
             fb_idx = best_b[2]
-            fb_entry = self.patterns[fb_idx]
-            return {
-                "pattern": fb_entry[0],
-                "category": fb_entry[2],
-                "key": fb_entry[3],
-                "action": fb_entry[4],
-                "response": fb_entry[5],
-                "score": best_b[1],
-            }
+            fb_entry = candidate_entries[fb_idx]
+            return self._result_from_entry(fb_entry, best_b[1])
 
         # нет подходящего кандидата
         self.log(f"No good match for '{phrase}' (best={score})")
@@ -183,7 +204,7 @@ class SmartMatcher:
             return []
         t = text.lower()
         # common separators in RU/EN to split multiple commands
-        for sep in [" и ", " а потом ", " затем ", " потом ", " потом же ", " затем же ", " then ", " and "]:
+        for sep in [" а потом ", " затем ", " потом ", " потом же ", " затем же ", " после этого ", " then ", " and then "]:
             t = t.replace(sep, " | ")
         return [p.strip() for p in t.split("|") if p.strip()]
 
@@ -196,139 +217,3 @@ class SmartMatcher:
             if best:
                 matches.append(best)
         return matches
-# ...existing code...
-
-# # filepath: [matcher.py](http://_vscodecontentref_/1)
-# # ...existing code...
-# from rapidfuzz import process, fuzz
-# from functools import lru_cache
-# import re
-
-# class SmartMatcher:
-#     """
-#     Улучшенный сопоставитель команд.
-#     Теперь поддерживает 3 категории верхнего уровня:
-#     - skills
-#     - meta
-#     - smalltalk
-#     """
-
-#     def __init__(self, dataset: dict, threshold: int = 60, debug: bool = False):
-#         self.dataset = dataset or {}
-#         self.threshold = threshold
-#         self.debug = debug
-#         self.patterns = self._build_patterns()
-
-#     def log(self, *args):
-#         if self.debug:
-#             print("[DEBUG matcher]", *args)
-
-#     def _build_patterns(self):
-#         patterns = []
-
-#         # === Skills ===
-#         skills = self.dataset.get("skills", {}) or {}
-#         for category, data in skills.items():
-#             for idx, cmd in enumerate(data.get("commands", [])):
-#                 pats = cmd.get("patterns", [])
-#                 if isinstance(pats, str):
-#                     pats = [pats]
-#                 for p in pats:
-#                     patterns.append((p, "skills", category, cmd.get("action"), cmd.get("response", "")))
-
-#         # === Meta ===
-#         meta = self.dataset.get("meta", {}) or {}
-#         for key, m in meta.items():
-#             for p in m.get("patterns", []):
-#                 patterns.append((p, "meta", key, None, m.get("response", "")))
-
-#         # === Smalltalk ===
-#         smalltalk = self.dataset.get("smalltalk", {}) or {}
-#         commands = smalltalk.get("commands", [])
-#         for idx, cmd in enumerate(commands):
-#             pats = cmd.get("patterns", [])
-#             if isinstance(pats, dict):
-#                 all_pats = []
-#                 for v in pats.values():
-#                     if isinstance(v, list):
-#                         all_pats.extend(v)
-#                     else:
-#                         all_pats.append(v)
-#             else:
-#                 all_pats = pats or []
-#             for p in all_pats:
-#                 patterns.append((p, "smalltalk", f"smalltalk_{idx}", None, cmd.get("response", "")))
-
-#         self.log(f"Loaded {len(patterns)} patterns total.")
-#         return patterns
-
-#     def _normalize(self, text: str) -> str:
-#         if not text:
-#             return ""
-        
-#         # простая очистка пунктуации
-#         text = re.sub(r"[^\w\s']", " ", text, flags=re.UNICODE).lower()
-
-#         # простые стоп-слова (можно расширять/локализовать)
-#         stopwords = {
-#             "ru": ["пожалуйста", "пжлст", "скажи", "скажи мне", "потом", "и", "ещё", "еще", "пожалуйста", "пожалуйстa"],
-#             "en": ["please", "and", "then", "say", "tell", "now"]
-#         }
-
-#         sw = set(sum(stopwords.values(), []))
-#         tokens = [t for t in text.split() if t and t not in sw]
-#         return " ".join(tokens)
-    
-#     @lru_cache(maxsize=2048)
-#     def _best_for_phrase(self, phrase: str):
-#         if not phrase:
-#             return None
-        
-#         normalized = self._normalize(phrase)
-#         if not normalized:
-#             return None
-
-#         choices = [p[0] for p in self.patterns]
-#         if not choices:
-#             return None
-
-#         best_a = process.extractOne(normalized, choices, scorer=fuzz.token_set_ratio)
-#         best_b = process.extractOne(normalized, choices, scorer=fuzz.token_sort_ratio)
-
-#         candidates = [b for b in (best_a, best_b) if b]
-#         if not candidates:
-#             return None
-
-#         # b = (match, score, idx)
-#         best = max(candidates, key=lambda x: x[1])
-#         if best[1] < self.threshold:
-#             self.log(f"No good match for '{phrase}' (best={best[1]})")
-#             return None
-
-#         patt = best[0]
-#         score = best[1]
-#         idx = best[2]
-#         pattern_entry = self.patterns[idx]
-#         return {
-#             "pattern": patt,
-#             "category": pattern_entry[1],
-#             "key": pattern_entry[2],
-#             "action": pattern_entry[3],
-#             "response": pattern_entry[4],
-#             "score": score,
-#         }
-
-#     def split_phrases(self, text: str):
-#         for sep in [" и ", " а потом ", " затем ", " потом ", " then ", " and "]:
-#             text = text.replace(sep, " | ")
-#         return [p.strip() for p in text.split("|") if p.strip()]
-
-#     def find_matches(self, text: str):
-#         matches = []
-#         if not text:
-#             return matches
-#         for part in self.split_phrases(text):
-#             best = self._best_for_phrase(part)
-#             if best:
-#                 matches.append(best)
-#         return matches

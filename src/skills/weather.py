@@ -27,7 +27,7 @@ def get_weather(*args, **kwargs):
     
     try:
         # Запрос к API OpenWeatherMap
-        url = f"http://api.openweathermap.org/data/2.5/weather"
+        url = "https://api.openweathermap.org/data/2.5/weather"
         params = {
             "q": city,
             "appid": api_key,

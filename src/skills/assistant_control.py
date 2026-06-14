@@ -1,9 +1,7 @@
 import re
-from pathlib import Path
-import yaml
 import sys
 
-from src.core.config import get_settings, DEFAULT_CONFIG_PATH
+from src.core.config import get_settings
 
 def _detect_lang_from_text(text: str):
     if not text:
@@ -22,16 +20,8 @@ def _detect_lang_from_text(text: str):
         return mapping.get(code, code)
     return None
 
-def _persist_settings(settings):
-    """
-    Если get_settings() вернул dict и у нас есть DEFAULT_CONFIG_PATH — сохраняем.
-    Безопасно игнорируем ошибки.
-    """
-    try:
-        if isinstance(settings, dict) and DEFAULT_CONFIG_PATH:
-            DEFAULT_CONFIG_PATH.write_text(yaml.safe_dump(settings, allow_unicode=True))
-    except Exception:
-        pass
+def _recognition_language(lang: str) -> str:
+    return {"ru": "ru-RU", "en": "en-US"}.get(lang, lang)
 
 def change_language(*args, **kwargs):
     """
@@ -49,13 +39,6 @@ def change_language(*args, **kwargs):
             "en": "Which language to set? (russian, english)"
         }.get(kwargs.get("lang", "ru"), "Какой язык установить?")
 
-    # Получаем централизованные настройки
-    settings = None
-    try:
-        settings = get_settings() or {}
-    except Exception:
-        settings = {}
-
     # Обновляем runtime-объекты, если переданы
     recognizer = kwargs.get("recognizer")
     tts = kwargs.get("tts")
@@ -68,30 +51,20 @@ def change_language(*args, **kwargs):
     except Exception:
         pass
 
-    # Обновляем settings в памяти и сохраняем, если возможно
+    # Обновляем config.yaml через центральный Settings API.
     try:
-        if isinstance(settings, dict):
-            settings.setdefault("assistant", {})["default_language"] = lang
-            _persist_settings(settings)
-        else:
-            # если get_settings() вернул объект (dataclass/Settings) — пробуем установить поле
-            try:
-                setattr(settings, "assistant", getattr(settings, "assistant", {}))
-                if isinstance(settings.assistant, dict):
-                    settings.assistant["default_language"] = lang
-                _persist_settings(getattr(settings, "__dict__", None) or settings)
-            except Exception:
-                pass
-    except Exception:
-        pass
+        settings = get_settings()
+        settings.set("assistant", "default_language", value=lang)
+        settings.set("language", value=_recognition_language(lang))
+        settings.save()
+    except Exception as exc:
+        return f"Не удалось сохранить язык: {exc}"
 
     messages = {
         "ru": "Язык обновлён.",
         "en": "Language updated."
     }
     return messages.get(lang, messages["ru"])
-# ...existing code...
-
 def shutdown_assistant(*args, **kwargs):
     """
     🛑 Корректно завершает работу Cry.
@@ -101,10 +74,19 @@ def shutdown_assistant(*args, **kwargs):
       - query: исходная команда пользователя
     """
 
+    if kwargs.get("chat_mode"):
+        return "В чате эта команда не закрывает окно настроек. Для остановки голосового ассистента используйте кнопку Остановить."
+
     context = kwargs.get("context", {})
-    query = kwargs.get("query", "")
-    assistant_name = context.get("assistant_name", "Cry")
-    workers = context.get("workers", [])
+    query = kwargs.get("query") or kwargs.get("text", "")
+    config = kwargs.get("config", {}) or context.get("config", {}) or {}
+    assistant_name = (
+        context.get("assistant_name")
+        or config.get("assistant", {}).get("name")
+        or "Cry"
+    )
+    workers = kwargs.get("workers") or context.get("workers", [])
+    recognizer = kwargs.get("recognizer") or context.get("recognizer")
 
     print(f"🧠 {assistant_name} получил команду завершения: {query}")
     print("🔻 Завершение активных процессов...")
@@ -116,6 +98,9 @@ def shutdown_assistant(*args, **kwargs):
                 print(f"✅ Остановлен поток: {getattr(w, 'name', 'Unnamed')}")
             except Exception as e:
                 print(f"⚠️ Не удалось остановить поток: {e}")
+
+    if recognizer and hasattr(recognizer, "stop"):
+        recognizer.stop()
 
     print(f"👋 {assistant_name} завершает работу.")
     sys.exit(0)

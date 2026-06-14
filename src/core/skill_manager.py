@@ -1,5 +1,10 @@
-import importlib, os
+import importlib
+import os
+import pkgutil
+import sys
 from pathlib import Path
+
+import src.skills
 
 
 class SkillManager:
@@ -22,19 +27,29 @@ class SkillManager:
     def load_all_skills(self):
         self.skills.clear()
         importlib.invalidate_caches()
-        if not self.skills_path.exists():
-            return
-        for file in os.listdir(self.skills_path):
-            if file.endswith(".py") and file != "__init__.py":
-                name = file[:-3]
-                module_name = f"src.skills.{name}"
-                try:
-                    module = importlib.import_module(module_name)
-                    importlib.reload(module)
-                    self.skills[name] = module
-                    self.log(f"OK {name}")
-                except Exception as e:
-                    self.log(f"ERROR {name}: {e}")
+        for name in self._discover_skill_names():
+            module_name = f"src.skills.{name}"
+            try:
+                module = importlib.import_module(module_name)
+                if not getattr(sys, "frozen", False):
+                    module = importlib.reload(module)
+                self.skills[name] = module
+                self.log(f"OK {name}")
+            except Exception as e:
+                self.log(f"ERROR {name}: {e}")
+
+    def _discover_skill_names(self) -> list[str]:
+        if self.skills_path.exists():
+            return [
+                file[:-3]
+                for file in os.listdir(self.skills_path)
+                if file.endswith(".py") and file != "__init__.py"
+            ]
+        return [
+            module_info.name
+            for module_info in pkgutil.iter_modules(src.skills.__path__)
+            if not module_info.ispkg and module_info.name != "__init__"
+        ]
 
     def execute(self, action: str, text: str = None, **kwargs):
         """

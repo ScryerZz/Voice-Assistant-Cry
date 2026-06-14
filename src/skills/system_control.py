@@ -11,6 +11,8 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
+from src.core.config import resolve_runtime_path
+
 # Опциональные импорты
 try:
     import pyautogui
@@ -39,7 +41,7 @@ def screenshot(*args, **kwargs):
     if not PYAUTOGUI_AVAILABLE:
         return "Модуль pyautogui не установлен. Установите: pip install pyautogui"
     
-    SCREENSHOT_DIR = Path("data/screenshots")
+    SCREENSHOT_DIR = resolve_runtime_path("user:data/screenshots", base="user")
     
     try:
         # Создаем директорию для скриншотов

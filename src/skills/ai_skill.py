@@ -5,9 +5,9 @@ from typing import Optional
 
 class AISkill:
     """
-    Навык общения с AI (YandexGPT API)
-    YandexGPT - российская языковая модель от Яндекса.
-    Работает через Yandex Cloud Foundation Models API.
+    Навык общения с ИИ через ЯндексGPT.
+    ЯндексGPT - российская языковая модель от Яндекса.
+    Работает через API Yandex Cloud Foundation Models.
     """
 
     def __init__(self, api_key: Optional[str] = None, folder_id: Optional[str] = None, 
@@ -16,30 +16,30 @@ class AISkill:
         self.folder_id = folder_id or os.getenv("YANDEX_FOLDER_ID")
         self.enabled = enabled and bool(self.api_key) and bool(self.folder_id)
         self.debug = debug
-        # YandexGPT API endpoint
+        # Эндпоинт API ЯндексGPT.
         self.endpoint = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
         # Модели: yandexgpt-lite (быстрая, бесплатная), yandexgpt (стандартная)
         self.model = f"gpt://{self.folder_id}/yandexgpt-lite/latest"
 
     def ask(self, prompt: str, lang: str = "ru") -> str:
         """
-        Отправляет текст в YandexGPT и возвращает ответ.
-        Использует Yandex Cloud Foundation Models API.
+        Отправляет текст в ЯндексGPT и возвращает ответ.
+        Использует API Yandex Cloud Foundation Models.
         """
         if not self.enabled:
             if self.debug:
                 print("[AISkill] AI module disabled")
-            return "🤖 AI-модуль сейчас не активен."
+            return "🤖 ИИ-модуль сейчас не активен."
 
         if not self.api_key:
             if self.debug:
                 print("[AISkill] API key missing")
-            return "⚠️ Не найден ключ YandexGPT API. Получите на cloud.yandex.ru"
+            return "⚠️ Не найден API-ключ ЯндексGPT. Добавьте его в настройках."
 
         if not self.folder_id:
             if self.debug:
                 print("[AISkill] Folder ID missing")
-            return "⚠️ Не найден Folder ID. Укажите его в настройках."
+            return "⚠️ Не найден ID каталога Яндекс Облака. Укажите его в настройках."
 
         # Системный промпт в зависимости от языка
         system_prompts = {
@@ -53,7 +53,7 @@ class AISkill:
             "x-folder-id": self.folder_id
         }
         
-        # YandexGPT использует свой формат запроса
+        # ЯндексGPT использует свой формат запроса.
         data = {
             "modelUri": self.model,
             "completionOptions": {
@@ -83,7 +83,7 @@ class AISkill:
 
             if response.status_code == 200:
                 result = response.json()
-                # YandexGPT возвращает ответ в поле result.alternatives[0].message.text
+                # ЯндексGPT возвращает ответ в поле result.alternatives[0].message.text.
                 alternatives = result.get("result", {}).get("alternatives", [])
                 if alternatives:
                     text = alternatives[0].get("message", {}).get("text", "").strip()
@@ -105,18 +105,20 @@ class AISkill:
             
             # Специфичные ошибки
             if response.status_code == 401:
-                return "⚠️ Неверный API ключ YandexGPT. Проверьте настройки."
+                return "⚠️ Неверный API-ключ ЯндексGPT. Проверьте настройки."
             elif response.status_code == 403:
-                return "⚠️ Доступ запрещен. Проверьте Folder ID и права доступа."
+                return "⚠️ Доступ запрещён. Проверьте ID каталога и права доступа."
+            elif response.status_code == 400:
+                return self._bad_request_message(response)
             elif response.status_code == 429:
-                return "⚠️ Превышен лимит запросов YandexGPT. Попробуйте позже."
+                return "⚠️ Превышен лимит запросов ЯндексGPT. Попробуйте позже."
             else:
-                return "⚠️ Ошибка при обращении к YandexGPT. Попробуйте позже."
+                return "⚠️ Ошибка при обращении к ЯндексGPT. Попробуйте позже."
 
         except requests.exceptions.Timeout:
             if self.debug:
                 print("[AISkill] TIMEOUT")
-            return "⚠️ AI не ответил вовремя."
+            return "⚠️ ИИ не ответил вовремя."
         
         except requests.exceptions.ConnectionError:
             if self.debug:
@@ -126,5 +128,20 @@ class AISkill:
         except Exception as e:
             if self.debug:
                 print(f"[AISkill] ERROR: {e}")
-            return "⚠️ Произошла непредвиденная ошибка при обращении к AI."
+            return "⚠️ Произошла непредвиденная ошибка при обращении к ИИ."
 
+    def _bad_request_message(self, response) -> str:
+        try:
+            message = str((response.json().get("error") or {}).get("message") or "")
+        except Exception:
+            message = str(getattr(response, "text", "") or "")
+
+        normalized = message.lower()
+        if "folder id" in normalized and "does not match" in normalized:
+            return (
+                "⚠️ ID каталога Яндекс Облака не совпадает с каталогом сервисного аккаунта. "
+                "Проверьте поле «ID каталога Яндекс Облака» в настройках."
+            )
+        if "model" in normalized or "modeluri" in normalized:
+            return "⚠️ ЯндексGPT отклонил модель запроса. Проверьте ID каталога и доступность модели."
+        return "⚠️ ЯндексGPT отклонил запрос. Проверьте ID каталога и параметры интеграции."

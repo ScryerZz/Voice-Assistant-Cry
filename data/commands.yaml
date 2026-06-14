@@ -26,6 +26,116 @@ skills:
         response:
           ru: "Язык обновлён."
           en: "Language changed."
+
+  assistant_info:
+    description: "Справка и диагностика"
+    commands:
+      - patterns:
+          - "что ты умеешь"
+          - "что умеешь"
+          - "какие команды"
+          - "список команд"
+          - "помощь"
+          - "help"
+          - "what can you do"
+          - "commands"
+        action: assistant_info.list_capabilities
+        response:
+          ru: "Показываю возможности."
+          en: "Showing capabilities."
+
+      - patterns:
+          - "примеры команд"
+          - "покажи примеры команд"
+          - "что можно сказать"
+          - "examples"
+          - "example commands"
+        action: assistant_info.show_example_commands
+        response:
+          ru: "Показываю примеры команд."
+          en: "Showing command examples."
+
+      - patterns:
+          - "проверь ассистента"
+          - "диагностика ассистента"
+          - "проверка системы ассистента"
+          - "diagnostics"
+          - "check assistant"
+          - "assistant diagnostics"
+        action: assistant_info.run_diagnostics
+        response:
+          ru: "Запускаю диагностику."
+          en: "Running diagnostics."
+
+  logs:
+    description: "Журнал событий"
+    commands:
+      - patterns:
+          - "где журнал"
+          - "статус журнала"
+          - "покажи журнал"
+          - "log status"
+          - "show log"
+        action: logs.log_status
+        response:
+          ru: "Проверяю журнал."
+          en: "Checking log."
+
+      - patterns:
+          - "последние ошибки"
+          - "последние записи журнала"
+          - "что в журнале"
+          - "recent logs"
+          - "last errors"
+        action: logs.recent_logs
+        response:
+          ru: "Читаю последние записи журнала."
+          en: "Reading recent log entries."
+
+      - patterns:
+          - "очисти журнал"
+          - "удали журнал"
+          - "clear log"
+          - "clear logs"
+        action: logs.clear_logs
+        response:
+          ru: "Очищаю журнал."
+          en: "Clearing log."
+
+  history:
+    description: "История команд"
+    commands:
+      - patterns:
+          - "история команд"
+          - "сколько команд"
+          - "статус истории"
+          - "command history"
+          - "history status"
+        action: history.history_status
+        response:
+          ru: "Проверяю историю команд."
+          en: "Checking command history."
+
+      - patterns:
+          - "последние команды"
+          - "что я говорил"
+          - "что ты распознал"
+          - "recent commands"
+          - "what did I say"
+        action: history.recent_history
+        response:
+          ru: "Читаю последние команды."
+          en: "Reading recent commands."
+
+      - patterns:
+          - "очисти историю команд"
+          - "удали историю команд"
+          - "clear command history"
+          - "clear history"
+        action: history.clear_history
+        response:
+          ru: "Очищаю историю команд."
+          en: "Clearing command history."
   
   # yandexgpt:
   #   description: "ai skills"
@@ -95,6 +205,22 @@ skills:
         response:
           ru: "Перезагружаю компьютер."
           en: "Restarting computer."
+
+      # === Cancel Scheduled Shutdown/Restart ===
+      - patterns:
+          - "отмени выключение"
+          - "отмена выключения"
+          - "отмени перезагрузку"
+          - "отмена перезагрузки"
+          - "отмени завершение работы"
+          - "cancel shutdown"
+          - "abort shutdown"
+          - "cancel restart"
+          - "abort restart"
+        action: system.cancel_shutdown
+        response:
+          ru: "Отменяю запланированное выключение или перезагрузку."
+          en: "Canceling scheduled shutdown or restart."
 
       # === Sleep ===
       - patterns:
@@ -303,11 +429,18 @@ skills:
           ru: "Устанавливаю напоминание..."
           en: "Setting reminder..."
   
-  youtube:
-    description: "Поиск на YouTube"
+  rutube:
+    description: "Поиск на Rutube"
     commands:
-      # === YouTube Search ===
+      # === Rutube Search ===
       - patterns:
+          - "найди на рутубе"
+          - "ищи на рутубе"
+          - "поиск на рутубе"
+          - "найди в рутубе"
+          - "ищи в рутубе"
+          - "рутуб"
+          - "rutube"
           - "найди на ютубе"
           - "ищи на ютубе"
           - "поиск на ютубе"
@@ -317,10 +450,13 @@ skills:
           - "search youtube"
           - "find on youtube"
           - "search on youtube"
-        action: youtube.search_youtube
+          - "search rutube"
+          - "find on rutube"
+          - "search on rutube"
+        action: rutube.search_rutube
         response:
-          ru: "Ищу на YouTube..."
-          en: "Searching on YouTube..."
+          ru: "Ищу на Rutube..."
+          en: "Searching on Rutube..."
   
   translator:
     description: "Переводчик текста"
@@ -505,11 +641,53 @@ skills:
   apps:
     description: "Управление приложениями"
     commands:
+      # === Generic application commands ===
+      - patterns:
+          - "открой приложение"
+          - "запусти приложение"
+          - "открой программу"
+          - "запусти программу"
+          - "open app"
+          - "launch app"
+          - "open application"
+          - "launch application"
+        action: apps.open_app
+        response:
+          ru: "Открываю приложение."
+          en: "Opening application."
+
+      - patterns:
+          - "закрой приложение"
+          - "закрой программу"
+          - "останови приложение"
+          - "останови программу"
+          - "close app"
+          - "close application"
+          - "stop app"
+          - "quit app"
+        action: apps.close_app
+        response:
+          ru: "Закрываю приложение."
+          en: "Closing application."
+
+      - patterns:
+          - "статус приложения"
+          - "проверь приложение"
+          - "статус программы"
+          - "проверь программу"
+          - "app status"
+          - "application status"
+          - "check app"
+          - "check application"
+        action: apps.app_status
+        response:
+          ru: "Проверяю приложение."
+          en: "Checking application."
+
       # === Telegram ===
       - patterns:
           - "открой телеграм"
           - "запусти телеграм"
-          - "включи телеграм"
           - "open telegram"
           - "launch telegram"
           - "start telegram"
@@ -520,7 +698,6 @@ skills:
       
       - patterns:
           - "закрой телеграм"
-          - "выключи телеграм"
           - "останови телеграм"
           - "close telegram"
           - "quit telegram"
@@ -534,7 +711,6 @@ skills:
       - patterns:
           - "открой яндекс музыку"
           - "запусти яндекс музыку"
-          - "включи яндекс музыку"
           - "открой музыку"
           - "open yandex music"
           - "launch yandex music"
@@ -545,7 +721,6 @@ skills:
       
       - patterns:
           - "закрой яндекс музыку"
-          - "выключи яндекс музыку"
           - "останови яндекс музыку"
           - "закрой музыку"
           - "close yandex music"
@@ -559,7 +734,6 @@ skills:
       - patterns:
           - "открой дискорд"
           - "запусти дискорд"
-          - "включи дискорд"
           - "open discord"
           - "launch discord"
           - "start discord"
@@ -570,7 +744,6 @@ skills:
       
       - patterns:
           - "закрой дискорд"
-          - "выключи дискорд"
           - "останови дискорд"
           - "close discord"
           - "quit discord"
@@ -584,7 +757,6 @@ skills:
       - patterns:
           - "открой стим"
           - "запусти стим"
-          - "включи стим"
           - "открой steam"
           - "open steam"
           - "launch steam"
@@ -596,7 +768,6 @@ skills:
       
       - patterns:
           - "закрой стим"
-          - "выключи стим"
           - "закрой steam"
           - "close steam"
           - "quit steam"
@@ -610,7 +781,6 @@ skills:
       - patterns:
           - "открой фл студио"
           - "запусти фл студио"
-          - "включи фл студио"
           - "открой fl studio"
           - "open fl studio"
           - "launch fl studio"
@@ -621,7 +791,6 @@ skills:
       
       - patterns:
           - "закрой фл студио"
-          - "выключи фл студио"
           - "закрой fl studio"
           - "close fl studio"
           - "quit fl studio"
@@ -634,7 +803,6 @@ skills:
       - patterns:
           - "открой ворд"
           - "запусти ворд"
-          - "включи ворд"
           - "открой word"
           - "open word"
           - "launch word"
@@ -646,7 +814,6 @@ skills:
       
       - patterns:
           - "закрой ворд"
-          - "выключи ворд"
           - "закрой word"
           - "close word"
           - "quit word"
@@ -659,7 +826,6 @@ skills:
       - patterns:
           - "открой эксель"
           - "запусти эксель"
-          - "включи эксель"
           - "открой excel"
           - "open excel"
           - "launch excel"
@@ -671,7 +837,6 @@ skills:
       
       - patterns:
           - "закрой эксель"
-          - "выключи эксель"
           - "закрой excel"
           - "close excel"
           - "quit excel"
@@ -684,7 +849,6 @@ skills:
       - patterns:
           - "открой повер поинт"
           - "запусти повер поинт"
-          - "включи повер поинт"
           - "открой powerpoint"
           - "open powerpoint"
           - "launch powerpoint"
@@ -696,7 +860,6 @@ skills:
       
       - patterns:
           - "закрой повер поинт"
-          - "выключи повер поинт"
           - "закрой powerpoint"
           - "close powerpoint"
           - "quit powerpoint"
