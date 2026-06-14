@@ -52,36 +52,8 @@ privacy:
   include_history_in_reports: false
   crash_summary_lines: 80
 profiles:
-  active: main
-  items:
-    main:
-      label: main
-      created_at: '2026-06-14 20:08:06'
-      settings:
-        assistant.name: Cry
-        assistant.default_language: ru
-        assistant.voice: default
-        assistant.personality: friendly
-        voice_enabled: false
-        voice_engine: silero
-        voice_speed: 180
-        voice_volume: 1.0
-        voice_gender: female
-        voice_speaker: aidar
-        language: ru-RU
-        wake_word: край
-        wake_words:
-          ru:
-          - край
-          en:
-          - cry
-        offline_mode: true
-        auto_switch_mode: false
-        privacy:
-          redact_secrets_in_exports: true
-          include_logs_in_reports: true
-          include_history_in_reports: false
-          crash_summary_lines: 80
+  active: ''
+  items: {}
 paths:
   datasets: data/commands.yaml
   user_commands: data/user_commands.yaml
